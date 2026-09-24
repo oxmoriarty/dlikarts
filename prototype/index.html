@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Dlicom Racers — Asset Garage</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="garage">
+      <section class="viewport-wrap" aria-label="3D asset viewport">
+        <canvas id="viewport"></canvas>
+        <div class="viewport-badge"><span class="live-dot"></span>runtime GLB inspection</div>
+        <div class="hint">drag to orbit · scroll/pinch to zoom</div>
+        <div id="loading" class="loading">Opening the garage…</div>
+      </section>
+      <aside class="console">
+        <header>
+          <p class="eyebrow">DLICOM RACERS / PHASE 01</p>
+          <h1>Asset<br /><em>Garage</em></h1>
+          <p class="deck">Guatam + the Midnight Mushroom kart — browser runtime validation.</p>
+        </header>
+
+        <section class="panel focus-panel">
+          <label for="focus">Inspection view</label>
+          <select id="focus">
+            <option value="combo">Driver in kart</option>
+            <option value="character">Guatam standing</option>
+            <option value="kart">Kart only</option>
+          </select>
+        </section>
+
+        <section class="panel controls-grid">
+          <label>Wheel roll <output id="rollValue">0°</output><input id="wheelRoll" type="range" min="0" max="360" value="0" /></label>
+          <label>Front steering <output id="steerValue">0°</output><input id="frontSteer" type="range" min="-32" max="32" value="0" /></label>
+          <label>Steering wheel <output id="wheelValue">0°</output><input id="steeringWheel" type="range" min="-240" max="240" value="0" /></label>
+        </section>
+
+        <section class="panel clip-panel">
+          <span class="panel-label">Guatam motion</span>
+          <div id="clips" class="clip-list" aria-label="Animation clips"></div>
+        </section>
+
+        <section class="panel stats-panel">
+          <div class="stat-head"><span>RUNTIME READOUT</span><button id="resetView" type="button">reset camera</button></div>
+          <pre id="stats">Waiting for assets…</pre>
+        </section>
+        <footer>GLB · WebGL · opaque PBR · DPR capped at 2</footer>
+      </aside>
+    </main>
+    <script type="importmap">
+      { "imports": {
+        "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+      }}
+    </script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "prototype",
+  "version": "1.0.0",
+  "description": "Lightweight Three.js runtime validation viewer for Dlicom Racers assets.",
+  "private": true,
+  "scripts": {
+    "start": "python -m http.server 4173 --directory .."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
