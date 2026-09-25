@@ -28,11 +28,12 @@ At the preferred budgets six racers plus six karts consume roughly 45–57k tria
 
 ## 3. Materials, textures and compression
 
-- Use simple glTF-compatible `MeshStandardMaterial`/Principled PBR: opaque, metallic normally 0, roughness 0.6–0.9. No transmission, screen-space dependencies, SSS, or Blender-only node graphs.
+- Use simple glTF-compatible `MeshStandardMaterial`/Principled PBR: opaque, with deliberate roughness/metallic separation between moulded plastic, painted metal, exposed metal and rubber. No transmission, screen-space dependencies, SSS, or Blender-only node graphs.
 - Prefer vertex color and separate low-cost geometry for color blocking. Reuse palette materials across a racer and its kart where art direction permits.
 - Use a single 512² PNG/WebP-equivalent source atlas per character or kart only when graphics cannot be geometry. 1024² is the exception for a hero-selection close-up, never 2K/4K. Emblems should be small atlas regions or simple geometry.
 - Runtime ship format should be KTX2/BasisU (ETC1S for color/albedo, UASTC only for visually sensitive normal/alpha assets), with PNG retained only as editable source. Avoid normal maps unless their readability benefit is clear.
 - Target ≤2 texture images per character and ≤2 per kart; use 0 when geometry/material color is sufficient. Mipmaps and power-of-two sizes are required. A 512² RGBA source is 1 MiB uncompressed; compressed GPU residency is materially lower but device dependent.
+- A compact embedded non-colour metallic/roughness profile lookup (≤32×4) is permitted when it lets vertex-coloured surface families share one opaque PBR material. Its UV bands may select plastic, painted metal, bare metal, rubber, tread and lamp finishes; it is a material-response lookup, not a photographic albedo texture.
 - Apply mesh compression only after visual regression testing: Draco for static meshes or Meshopt for geometry/animation delivery; use one consistent encoder and retain an uncompressed debug GLB in source control if needed.
 
 ## 4. Naming and hierarchy

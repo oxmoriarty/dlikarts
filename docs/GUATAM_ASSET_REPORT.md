@@ -12,12 +12,12 @@ Measurements below are taken from the final GLBs as loaded by Three.js (GPU-faci
 | Vertices | 11,796 | 14,064 |
 | Runtime material count | 1 | 1 |
 | Runtime mesh primitives / approximate draw calls | 1 | 6 |
-| Texture images | 0 | 0 |
+| Texture images | 0 | 1 embedded 32×4 non-colour metallic/roughness profile PNG |
 | Bone count | 18 | n/a |
 | Animation clips | 8 | n/a |
-| GLB size | 1,192,524 bytes (1.14 MiB) | 698,376 bytes (682 KiB) |
+| GLB size | 1,192,524 bytes (1.14 MiB) | 287,944 bytes (281 KiB) |
 
-The apparently high vertex counts relative to triangles are intentional: the single-material strategy stores the palette in the standard glTF `COLOR_0` vertex-color attribute. Vertices split at UV/normal/color seams, but this replaces many material primitives and state changes. There are no image textures, normal maps, alpha materials, or external file requests.
+The apparently high vertex counts relative to triangles are intentional: the single-material strategy stores the palette in the standard glTF `COLOR_0` vertex-color attribute. Vertices split at UV/normal/color seams, but this replaces many material primitives and state changes. The kart additionally embeds one 32×4 non-colour metallic/roughness lookup PNG; it has no normal maps, alpha materials, or external file requests.
 
 ## Final contents
 
@@ -49,7 +49,7 @@ The validation viewer at `prototype/` loads the final separate GLBs with Three.j
 
 | Test | Result |
 | --- | --- |
-| GLB loading and material requests | Passed; both assets load and render with no external texture requests. |
+| GLB loading and material requests | Passed; both assets load and render with no external texture requests. The kart's compact profile texture is embedded in its GLB. |
 | Skeleton and clips | Passed; 18-joint skin and all eight named clips are visible to Three.js. |
 | Seated placement | Passed after adjusting `DRIVER_SEAT`; Guatam sits in the kart rather than hovering over its seat. |
 | Wheel / steering transforms | Passed; all four named roll nodes, both front steering parents, and steering-wheel node respond to viewer controls. |
@@ -66,14 +66,14 @@ The viewer initially revealed an axis mismatch (Blender's exported Z-up versus T
 
 Six Guatams plus six karts amount to approximately **42 asset primitives/draw calls** before track, props, VFX, UI and shadows (6 × (1 character + 6 kart)). Geometry is approximately **51,720 triangles** for the racers and karts together. This is conservative enough to leave a meaningful mobile budget for track/environment geometry; frustum culling, opaque rendering and a low-cost blob/contact-shadow option remain essential in a real race.
 
-The combined base GLB payload is about **10.82 MiB** for six copies if no shared/cached load path is used; production loading must download each unique asset once and reuse its GPU resources for duplicates. The zero-texture strategy avoids a large mobile texture-memory multiplier.
+The combined base GLB payload is about **8.49 MiB** for six copies if no shared/cached load path is used; production loading must download each unique asset once and reuse its GPU resources for duplicates. The single 32×4 profile texture is negligible in memory and avoids a large mobile texture-memory multiplier.
 
 ## Optimization decisions and compromises
 
-- One vertex-colored opaque PBR material per asset removes texture fetches and material switching. It trades a modest GLB vertex-color payload for much lower draw-call pressure.
+- One vertex-colored opaque PBR material per asset removes material switching. The kart adds one tiny metallic/roughness lookup fetch, trading a negligible texture cost for clear plastic, painted-metal, bare-metal, rubber, tread and lamp response while retaining one material per kart primitive.
 - No LOD meshes were created. At 3,932 / 4,688 triangles, extra LOD data would add pipeline complexity and loading cost before profiling establishes a geometry bottleneck. Revisit only after a representative six-kart track profile.
 - GLBs are intentionally not Draco/Meshopt compressed yet: together they are about 1.80 MiB and avoiding a decoder keeps this prototype viewer simple. Add Meshopt delivery compression to the production bundling step if a full roster/track loading profile justifies it.
-- No textures exist, so KTX2/Basis compression is not applicable to these two assets. The next assets should continue using palette vertex color until an atlas produces a visible improvement.
+- Guatam has no images. The kart's embedded 32×4 profile PNG is already negligible; it does not warrant KTX2/Basis conversion. The next assets should continue using palette vertex color and add an atlas only when it produces a visible improvement.
 - Blender 2.83 emits tangent-generation notices for some cap topology while exporting. These assets have no normal maps and Three.js final validation produced no related console warning/error; tangents are not required by the shipped material.
 
 ## Compliance with `ASSET_SPECIFICATION.md`
@@ -82,7 +82,7 @@ The combined base GLB payload is about **10.82 MiB** for six copies if no shared
 | --- | --- |
 | Units, axis/root, applied export transforms | Compliant |
 | Character and kart triangle / material-slot budgets | Compliant |
-| Texture/material policy | Compliant (0 textures, 1 opaque material each) |
+| Texture/material policy | Compliant (Guatam: 0 textures / 1 opaque material; kart: 1 embedded 32×4 profile texture / 1 opaque material) |
 | Humanoid skeleton ≤24 deform bones | Compliant (18) |
 | Naming, wheel hierarchy and sockets | Compliant |
 | Separate Blender masters and GLBs | Compliant |
@@ -119,8 +119,8 @@ The combined base GLB payload is about **10.82 MiB** for six copies if no shared
 - Made `DRIVER_SEAT` the sole character-root source of truth in the viewer. Guatam's root snaps to the socket; no compensating viewer translation remains.
 - Retargeted the two-hand seated/left/right grip clips to the corrected rim position. In the validation viewer, moving **Front steering** now turns the front wheels and rim together (1.5× rim travel) and selects the matching baked two-hand steering pose; no runtime IK is added.
 - Lowered the physical seat cushion and moved `DRIVER_SEAT` 0.20 m lower and 0.21 m forward from its original location. The driving grips and pedal targets were rebaked relative to that source anchor, retaining wheel contact while moving Guatam closer to the nose pod.
-- Re-embedded the fixed steering-column base inside the rear of the mushroom-nose pod, eliminating the visible detachment while retaining the independently rotating `STEERING_WHEEL` rim. Shortened only the driver-facing end of that column. The rim now has a slightly bolder dark-metal finish and three simple spokes so it remains legible in both kart-only and driver views; this does not alter the column length. Raised the existing backrest to meet the lowered shoulder line. Rear inspection now shows the intended head-and-small-shoulder silhouette instead of a torso perched above the seat.
-- Rebuilt all four tire surfaces as continuous 24-sided round torus forms. Each black tire has four narrow, nearly flush ash road-tread channels that conform to its curved surface, preserving the circular silhouette without off-road-style lugs. The channels are merged into the existing wheel mesh and baked into the one-material vertex palette, adding no runtime wheel node, material slot, or draw call. Kart complexity is now 4,688 triangles / 14,064 vertices and the exported kart GLB is 698,376 bytes (682 KiB).
+- Re-embedded the fixed steering-column base inside the rear of the mushroom-nose pod, eliminating the visible detachment while retaining the independently rotating `STEERING_WHEEL` rim. Shortened only the driver-facing end of that column. The rim now has a slightly bolder dark finish and three simple spokes so it remains legible in both kart-only and driver views; this does not alter the column length. Raised the existing backrest to meet the lowered shoulder line. Rear inspection now shows the intended head-and-small-shoulder silhouette instead of a torso perched above the seat.
+- Rebuilt all four tire surfaces as continuous 24-sided round torus forms. Each black tire has four narrow, nearly flush ash road-tread channels that conform to its curved surface, preserving the circular silhouette without off-road-style lugs. The channels are merged into the existing wheel mesh and baked into the one-material surface palette, adding no runtime wheel node, material slot, or draw call. Kart complexity is now 4,688 triangles / 14,064 vertices and the regenerated kart GLB is 287,944 bytes (281 KiB).
 - Refined Guatam's production rest pose from the supplied standing references without changing his established stylized identity: relaxed nearer-to-body arm chains, shoulders wider than the pelvis, a distinct hoodie torso/shoulder/pelvis silhouette, a visible neck, vertically aligned legs, and planted feet. The new low-poly limb tubes align directly to the armature's shoulder → elbow → wrist and hip → knee → ankle segments. The humanoid rig remains 18 bones and all existing clips were rebaked for the adjusted rest pose. Guatam is now 3,932 triangles / 11,796 vertices and the exported character GLB is 1,192,524 bytes (1.14 MiB).
 - Replaced Guatam's old isolated cone-spike hair with an opaque rounded crown cap and 14 flattened low-poly lock meshes. The locks are deliberately asymmetric and divided into forehead fringe, temples, crown, back, and nape layers to preserve the supplied turnaround’s silhouette while keeping ears visible. Hair remains part of the `HEAD`-weighted one-material character mesh, with no transparency, textures, added bones, or runtime draw calls.
 
@@ -129,3 +129,18 @@ The combined base GLB payload is about **10.82 MiB** for six copies if no shared
 Visual browser inspection covered upright standing, victory, kart three-quarter/rear, seated driver, both authored steering clips, and the revised tires in kart-only and driver views. The tires remained circular while wheel roll, front steering, proportional steering-wheel rotation, all eight clips, sockets and GLB loading remained functional. Final browser console check: no relevant errors or warnings.
 
 No remaining blocking visual defect was found in this corrective scope. The model remains intentionally simplified; it is not a finger-rigged or cinematic character.
+
+## Surface-material refinement — kart
+
+This non-redesign material pass preserves the approved kart geometry, colour palette, hierarchy, wheel nodes, sockets and driver placement. `MAT_kart_surface_profiles` remains the sole opaque runtime material for every kart primitive. Existing per-face vertex colours provide the visual palette, while the embedded `TEX_kart_surface_profiles` 32×4 non-colour PNG uses metallic/roughness bands selected by a compact UV strip:
+
+| Existing surface family | Runtime response |
+| --- | --- |
+| Main black shell, seat, fenders and steering rim | moulded dark plastic — non-metallic, moderately rough |
+| Red rails, spoiler, rear supports and mushroom cap | red painted metal — smoother and partially metallic |
+| Bumper, steering column, hubs and spokes | exposed dark metal — strongly metallic with controlled highlight width |
+| Tire casing | nearly matte black rubber |
+| Flush ash tread channels | restrained rough rubber/composite detail |
+| Lamps, mushroom stem and spots | glossy non-metallic cream plastic |
+
+The profile image is embedded in `assets/vehicles/guatam-kart.glb`; it creates no external network request and no new draw calls or material slots. Geometry remains 4,688 triangles / 14,064 GPU-facing vertices; the kart remains one runtime material across six mesh primitives. The regenerated GLB is 287,944 bytes (281 KiB). Browser validation in the Asset Garage confirmed successful GLB loading, all named runtime nodes, one material, the embedded profile map, and no console warnings or errors.
