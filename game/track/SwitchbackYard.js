@@ -71,7 +71,9 @@ export class SwitchbackYard {
       { row: 1, lane: 0 },
     ];
     const slot = layout[index] || layout[layout.length - 1];
-    const base = this.sampleAt(.012 - slot.row * .008);
+    // Grid slots sit immediately before the painted line, so the checkerboard
+    // is visibly in front of the racers at the beginning and crossed at GO.
+    const base = this.sampleAt(.988 - slot.row * .008);
     return { position: base.p.clone().addScaledVector(base.normal, slot.lane * this.gridLaneSpacing).add(new THREE.Vector3(0, this.roadSurfaceOffset + this.kartWheelGroundOffset, 0)), yaw: Math.atan2(base.tangent.x, base.tangent.z), progress: base.t };
   }
   isOnJump(progress) { return progress > this.jumpStart && progress < this.jumpEnd; }
@@ -143,61 +145,78 @@ export class SwitchbackYard {
     const arch = new THREE.Mesh(new THREE.BoxGeometry(this.width, .16, .16), mat); arch.position.copy(s.p).add(new THREE.Vector3(0,height,0)); arch.rotation.y = Math.atan2(s.tangent.x, s.tangent.z); this.scene.add(arch);
   }
   createStartLine(s) {
-    // A two-row checkerboard painted directly across the road: one static
-    // instanced mesh keeps the visual crisp without adding 24 draw calls.
-    const columns = 12, rows = 2, cellWidth = this.width / columns, cellDepth = .86;
-    const checker = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(cellWidth, .026, cellDepth),
-      new THREE.MeshBasicMaterial({ vertexColors: true }),
-      columns * rows,
+    // Make the white field a real surface, then add only raised black tiles.
+    // This avoids vertex-color/material interpolation ever turning the whole
+    // line dark in a browser renderer.
+    const columns = 12, rows = 3, cellWidth = this.width / columns, cellDepth = .82;
+    const yaw = Math.atan2(s.tangent.x, s.tangent.z);
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(this.width + .06, .045, rows * cellDepth + .08),
+      new THREE.MeshBasicMaterial({ color: 0xffffff }),
     );
-    checker.name = 'START_LINE_CHECKERBOARD';
-    const rotation = new THREE.Quaternion().setFromAxisAngle(UP, Math.atan2(s.tangent.x, s.tangent.z));
+    base.name = 'START_LINE_WHITE_BASE';
+    base.position.copy(s.p); base.position.y += this.roadSurfaceOffset + .04; base.rotation.y = yaw;
+    this.scene.add(base);
+    const checker = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(cellWidth * .88, .019, cellDepth * .84),
+      new THREE.MeshBasicMaterial({ color: 0x050505 }),
+      (columns * rows) / 2,
+    );
+    checker.name = 'START_LINE_RAISED_BLACK_TILES';
+    const rotation = new THREE.Quaternion().setFromAxisAngle(UP, yaw);
     const matrix = new THREE.Matrix4(), position = new THREE.Vector3();
-    const black = new THREE.Color(0x0b0d12), white = new THREE.Color(0xf5f2e9);
     let instance = 0;
     for (let row = 0; row < rows; row += 1) for (let column = 0; column < columns; column += 1) {
+      if ((row + column) % 2 === 0) continue;
       const lateral = -this.width / 2 + cellWidth * (column + .5);
       const longitudinal = (row - (rows - 1) / 2) * cellDepth;
       position.copy(s.p).addScaledVector(s.normal, lateral).addScaledVector(s.tangent, longitudinal);
-      position.y += this.roadSurfaceOffset + .035;
+      position.y += this.roadSurfaceOffset + .072;
       matrix.compose(position, rotation, new THREE.Vector3(1, 1, 1)); checker.setMatrixAt(instance, matrix);
-      checker.setColorAt(instance, (row + column) % 2 ? black : white); instance += 1;
+      instance += 1;
     }
-    checker.instanceMatrix.needsUpdate = true; if (checker.instanceColor) checker.instanceColor.needsUpdate = true;
+    checker.instanceMatrix.needsUpdate = true;
     this.scene.add(checker);
   }
   createFinishGantry(s) {
-    // The matching overhead checkerboard is held in a group so it can be
-    // shown precisely for the final lap without rebuilding track geometry.
-    const group = new THREE.Group(); group.name = 'FINAL_LAP_FINISH_GANTRY'; group.position.copy(s.p); group.visible = false;
+    // The physical finish structure is visible for every lap. Final-lap state
+    // is gameplay, not a reason to hide a crucial track landmark.
+    const group = new THREE.Group(); group.name = 'FINAL_LAP_FINISH_GANTRY'; group.position.copy(s.p); group.visible = true;
     const postMat = new THREE.MeshStandardMaterial({ color: 0x11151a, roughness: .46, metalness: .45 });
     for (const side of [-1, 1]) {
       const post = new THREE.Mesh(new THREE.CylinderGeometry(.12, .15, 5.45, 8), postMat);
       post.position.copy(s.normal).multiplyScalar(side * (this.width / 2 + .42)); post.position.y = 2.725; post.castShadow = true; group.add(post);
     }
-    const columns = 12, rows = 2, cellWidth = this.width / columns, cellHeight = .72;
-    const banner = new THREE.InstancedMesh(
-      new THREE.BoxGeometry(cellWidth, cellHeight, .07),
-      new THREE.MeshBasicMaterial({ vertexColors: true }),
-      columns * rows,
+    const columns = 12, rows = 3, cellWidth = this.width / columns, cellHeight = .58;
+    const yaw = Math.atan2(s.tangent.x, s.tangent.z);
+    const bannerBase = new THREE.Mesh(
+      new THREE.BoxGeometry(this.width + .12, rows * cellHeight + .10, .095),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
     );
-    banner.name = 'FINISH_LINE_CHECKERBOARD';
-    const rotation = new THREE.Quaternion().setFromAxisAngle(UP, Math.atan2(s.tangent.x, s.tangent.z));
+    bannerBase.name = 'FINISH_LINE_WHITE_BANNER';
+    bannerBase.position.y = 3.72 + cellHeight * (rows - 1) / 2; bannerBase.rotation.y = yaw;
+    group.add(bannerBase);
+    const banner = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(cellWidth * .88, cellHeight * .84, .13),
+      new THREE.MeshBasicMaterial({ color: 0x050505, side: THREE.DoubleSide }),
+      (columns * rows) / 2,
+    );
+    banner.name = 'FINISH_LINE_RAISED_BLACK_TILES';
+    const rotation = new THREE.Quaternion().setFromAxisAngle(UP, yaw);
     const matrix = new THREE.Matrix4(), position = new THREE.Vector3();
-    const black = new THREE.Color(0x080a0d), white = new THREE.Color(0xf8f4e9);
     let instance = 0;
     for (let row = 0; row < rows; row += 1) for (let column = 0; column < columns; column += 1) {
+      if ((row + column) % 2 === 0) continue;
       const lateral = -this.width / 2 + cellWidth * (column + .5);
-      position.copy(s.normal).multiplyScalar(lateral); position.y = 3.95 + cellHeight * row;
+      position.copy(s.normal).multiplyScalar(lateral); position.y = 3.72 + cellHeight * row;
       matrix.compose(position, rotation, new THREE.Vector3(1, 1, 1)); banner.setMatrixAt(instance, matrix);
-      banner.setColorAt(instance, (row + column) % 2 ? black : white); instance += 1;
+      instance += 1;
     }
-    banner.instanceMatrix.needsUpdate = true; if (banner.instanceColor) banner.instanceColor.needsUpdate = true;
+    banner.instanceMatrix.needsUpdate = true;
     group.add(banner); this.scene.add(group); return group;
   }
   setFinalLapVisual(active) {
-    if (this.finishGantry) this.finishGantry.visible = active;
+    if (this.finishGantry) { this.finishGantry.visible = true; this.finishGantry.userData.finalLapActive = active; }
   }
   constrain(kart) {
     const q = this.query(kart.position, kart.progress);

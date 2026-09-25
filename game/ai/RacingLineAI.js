@@ -13,7 +13,10 @@ export class RacingLineAI {
     const curve = 1 - THREE.MathUtils.clamp(next.tangent.dot(after.tangent), .72, 1); const targetSpeed = 16.5 - curve * 16 - Math.abs(angle) * 3 - this.seed * .12;
     this.actions.steer = THREE.MathUtils.clamp(-angle * 1.55, -1, 1); this.actions.throttle = kart.speed < targetSpeed ? 1 : .18; this.actions.brake = kart.speed > targetSpeed + 2 ? .55 : 0;
     this.actions.drift = Math.abs(angle) > .23 && kart.speed > 8 && !kart.offRoad; this.actions.recover = !this.track.query(kart.position, kart.progress).inBounds;
-    if (this.racer.item && this.timer <= 0) { this.actions.useItem = true; this.timer = 1.5 + this.seed * .18; } else this.actions.useItem = false;
+    // Items live on the kart, so every CPU racer can collect and use the same
+    // power-ups as Guatam. Rattle Pod's projectile system excludes only its
+    // owner, allowing it to hit any other active racer.
+    if (kart.item && this.timer <= 0) { this.actions.useItem = true; this.timer = 1.5 + this.seed * .18; } else this.actions.useItem = false;
     return this.actions;
   }
 }

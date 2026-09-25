@@ -4,14 +4,14 @@ import { FixedStepLoop } from './core/FixedStepLoop.js';
 import { InputState } from './input/InputState.js';
 import { KeyboardInput } from './input/KeyboardInput.js';
 import { TouchControls } from './input/TouchControls.js';
-import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=finish-exit';
-import { SwitchbackYard } from './track/SwitchbackYard.js?v=start-finish-lines';
+import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=shield-and-checkers';
+import { SwitchbackYard } from './track/SwitchbackYard.js?v=visible-checkers';
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=ground-grid-5i';
 import { KartVisual } from './vehicle/KartVisual.js';
-import { RaceSystem } from './race/RaceSystem.js?v=finish-exit';
-import { RacingLineAI } from './ai/RacingLineAI.js';
-import { PowerupSystem } from './powerups/PowerupSystem.js?v=halo-bubble';
-import { UI } from './ui/UI.js?v=ground-grid-5h';
+import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
+import { RacingLineAI } from './ai/RacingLineAI.js?v=cpu-powerups';
+import { PowerupSystem } from './powerups/PowerupSystem.js?v=vertical-zipcap';
+import { UI } from './ui/UI.js?v=lap-banner';
 
 const canvas = document.querySelector('#game');
 const ui = new UI();
@@ -26,6 +26,7 @@ const fill = new THREE.DirectionalLight(0x4f9ee8, 1.2); fill.position.set(-22, 1
 const loader = new GLTFLoader();
 const input = new InputState(); const keyboardInput = new KeyboardInput(input); const touchInput = new TouchControls(input);
 const autoplaySmokeTest = new URLSearchParams(location.search).has('autoplay');
+const previewFinish = new URLSearchParams(location.search).has('previewFinish');
 let game = null; let frameSamples = []; let lastRender = performance.now(); let qualityProfile;
 
 function applyQuality(name) {
@@ -76,7 +77,17 @@ function resolveKartCollisions(racers) {
     // never become a physical obstacle for racers still on the final lap.
     if (a.finished || b.finished) continue;
     const dx = b.position.x - a.position.x, dz = b.position.z - a.position.z; const d2 = dx*dx + dz*dz; const min = a.tuning.collisionRadius + b.tuning.collisionRadius;
-    if (d2 && d2 < min * min) { const d = Math.sqrt(d2), push = (min - d) * .5; const nx = dx / d, nz = dz / d; const weightA = a.guardTimer > 0 ? .2 : .5, weightB = b.guardTimer > 0 ? .2 : .5; a.position.x -= nx * push * weightA; a.position.z -= nz * push * weightA; b.position.x += nx * push * weightB; b.position.z += nz * push * weightB; a.speed *= .985; b.speed *= .985; }
+    if (d2 && d2 < min * min) {
+      const d = Math.sqrt(d2), push = min - d, nx = dx / d, nz = dz / d;
+      // Guarded karts cannot be displaced, slowed, or stunned by another
+      // racer's kart. The attacking kart is the only one pushed away.
+      if (a.guardTimer > 0 && b.guardTimer > 0) continue;
+      if (a.guardTimer > 0) { b.position.x += nx * push; b.position.z += nz * push; b.speed *= .97; continue; }
+      if (b.guardTimer > 0) { a.position.x -= nx * push; a.position.z -= nz * push; a.speed *= .97; continue; }
+      a.position.x -= nx * push * .5; a.position.z -= nz * push * .5;
+      b.position.x += nx * push * .5; b.position.z += nz * push * .5;
+      a.speed *= .985; b.speed *= .985;
+    }
   }
 }
 
@@ -101,7 +112,7 @@ function update(dt) {
   player.kart.update(dt, playerActions, track, enabled && race.state === 'RACING');
   for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt); if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
   resolveKartCollisions(racers); powerups.update(dt, racers); race.update(dt);
-  track.setFinalLapVisual(player.lap >= LAPS - 1);
+  track.setFinalLapVisual(previewFinish || player.lap >= LAPS - 1);
   retireFinishedCpuVisuals(dt, racers); racers.forEach(racer => { if (!racer.retired) racer.visual.update(dt); });
 }
 

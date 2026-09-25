@@ -2,6 +2,12 @@ export const STEP = 1 / 60;
 export const MAX_STEPS = 5;
 export const LAPS = 3;
 
+// Gameplay-item timings live with the other central tuning values so they can
+// be balanced without touching rendering or collision code.
+export const POWERUP_TUNING = Object.freeze({
+  haloGuardSeconds: 7,
+});
+
 export const KART_TUNING = Object.freeze({
   acceleration: 13.5,
   boostAcceleration: 20,

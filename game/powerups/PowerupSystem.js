@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ObjectPool } from '../core/ObjectPool.js';
+import { POWERUP_TUNING } from '../config/game-config.js?v=shield-and-checkers';
 
 const TYPES = ['ZIPCAP', 'RATTLE POD', 'HALO GUARD'];
 const PICKUP_RADIUS = 1.35;
@@ -33,7 +34,9 @@ function speedBlade(points, y) {
   for (let i = 1; i < points.length; i += 1) shape.lineTo(points[i][0], points[i][1]);
   shape.closePath();
   const blade = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: .07, bevelEnabled: true, bevelSegments: 1, bevelSize: .018, bevelThickness: .018 }), MAT.speed);
-  blade.rotation.x = -Math.PI / 2; blade.position.y = y; blade.castShadow = true;
+  // ExtrudeGeometry is naturally drawn in the X/Y plane. Keeping that plane
+  // upright makes Zipcap read as a vertical sign/icon when it spins on Y.
+  blade.position.y = y; blade.castShadow = true;
   return blade;
 }
 
@@ -43,8 +46,8 @@ function createSpeedPickup() {
   const upper = speedBlade([[-.58,.02],[-.14,.30],[.64,.50],[.15,.04],[-.34,-.13]], .04);
   const lower = speedBlade([[-.64,-.50],[.14,-.30],[.58,-.02],[.34,.13],[-.15,-.04]], .09);
   group.add(upper, lower);
-  addMesh(group, new THREE.BoxGeometry(.24, .09, .24), MAT.speedCore, new THREE.Vector3(0,.13,0), new THREE.Euler(0,Math.PI / 4,0));
-  addMesh(group, new THREE.TorusGeometry(.18,.025,4,4), MAT.speed, new THREE.Vector3(0,.15,0), new THREE.Euler(Math.PI / 2,0,Math.PI / 4));
+  addMesh(group, new THREE.BoxGeometry(.20, .20, .09), MAT.speedCore, new THREE.Vector3(0,.05,.08), new THREE.Euler(0,0,Math.PI / 4));
+  addMesh(group, new THREE.TorusGeometry(.18,.025,4,4), MAT.speed, new THREE.Vector3(0,.05,.14), new THREE.Euler(0,0,Math.PI / 4));
   return group;
 }
 
@@ -124,7 +127,7 @@ export class PowerupSystem {
   use(racer) {
     const type = racer.kart.item; if (!type) return false; racer.kart.item = null;
     if (type === 'ZIPCAP') { racer.kart.boostTimer = Math.max(racer.kart.boostTimer, .85); racer.kart.boostStrength = Math.max(racer.kart.boostStrength, 9); return true; }
-    if (type === 'HALO GUARD') { racer.kart.guardTimer = 3; return true; }
+    if (type === 'HALO GUARD') { racer.kart.guardTimer = POWERUP_TUNING.haloGuardSeconds; return true; }
     const projectile = this.projectiles.acquire(); if (!projectile) return false;
     const launchDirection = racer.kart.forward(new THREE.Vector3()).normalize();
     projectile.active = true; projectile.owner = racer; projectile.age = 0; projectile.mesh.visible = true;
