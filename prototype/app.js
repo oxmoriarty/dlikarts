@@ -98,7 +98,7 @@ document.querySelector('#frontSteer').addEventListener('input',event=>{
 document.querySelector('#focus').addEventListener('change',e=>setMode(e.target.value));
 document.querySelector('#resetView').onclick=()=>setMode(document.querySelector('#focus').value);
 Promise.all([
-  loader.loadAsync('../assets/characters/guatam.glb'), loader.loadAsync('../assets/vehicles/guatam-kart.glb')
+  loader.loadAsync('../assets/characters/guatam.glb'), loader.loadAsync('../assets/vehicles/guatam-kart.glb?v=approved-palette')
 ]).then(([cg,kg])=>{
   character=cg.scene; kart=kg.scene; character.name='CHARACTER_RUNTIME'; kart.name='KART_RUNTIME'; shadowify(character); shadowify(kart);
   scene.add(character,kart); counts.character=measure(character,cg); counts.kart=measure(kart,kg); clips=cg.animations; mixer=new THREE.AnimationMixer(character); setupClips(); showStats(); setMode('combo'); setWheels(); status.textContent='Runtime assets loaded'; status.classList.add('done');

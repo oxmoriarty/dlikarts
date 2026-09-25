@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>DliKarts — Switchback Yard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <canvas id="game" aria-label="DliKarts racing game"></canvas>
+    <div id="loading" class="screen loading"><div class="brand">DLI<span>KARTS</span></div><p>Preparing Switchback Yard</p><div class="meter"><i></i></div></div>
+    <section id="start" class="screen start hidden" aria-label="Start race">
+      <p class="eyebrow">VERTICAL SLICE / SWITCHBACK YARD</p><h1>READY TO<br><em>RACE?</em></h1><p class="copy">Guatam versus four test pilots.<br>Three laps. Drift for boost.</p>
+      <button id="start-race">START RACE</button><p class="keys">WASD / ARROWS · SPACE DRIFT · E ITEM · R RECOVER</p>
+      <label class="quality">QUALITY <select id="quality"><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label>
+    </section>
+    <div id="hud" aria-live="polite"><div class="hud-top"><strong id="position">1ST / 5</strong><span id="lap">LAP 1 / 3</span><time id="time">0:00.00</time></div><div id="countdown"></div><div id="warning"></div><div class="hud-bottom"><div class="item"><small>ITEM</small><b id="item">—</b></div><div class="drift"><small>DRIFT</small><b id="drift">READY</b></div></div></div>
+    <pre id="debug" aria-hidden="true"></pre>
+    <div id="rotate" class="screen rotate"><div>↻</div><strong>ROTATE YOUR DEVICE</strong><small>DliKarts races best in landscape.</small></div>
+    <section id="results" class="screen results" aria-label="Race results"><p class="eyebrow">RACE COMPLETE</p><h2 id="result-place">1ST PLACE</h2><dl><div><dt>RACE TIME</dt><dd id="result-time">0:00.00</dd></div><div><dt>BEST LAP</dt><dd id="result-best">0:00.00</dd></div></dl><button id="retry">RACE AGAIN</button></section>
+    <div id="touch-controls" aria-label="Touch racing controls"><div class="touch-left"><button data-touch="left" aria-label="Steer left">◀</button><button data-touch="right" aria-label="Steer right">▶</button></div><div class="touch-right"><button data-touch="drift" aria-label="Drift">DRIFT</button><button data-touch="brake" aria-label="Brake">BRAKE</button><button data-touch="item" aria-label="Use power-up">ITEM</button><button data-touch="recover" class="recover" aria-label="Recover kart">R</button></div></div>
+    <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.1/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.1/examples/jsm/"}}</script>
+    <script type="module" src="./main.js?v=start-finish-lines"></script>
+  </body>
+</html>

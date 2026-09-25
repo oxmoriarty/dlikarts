@@ -47,6 +47,7 @@ RED = None
 RUBBER = None
 METAL = None
 PALETTE = None
+KART_SURFACE_PALETTE = None
 
 def smooth(obj):
     if obj and obj.type == 'MESH':
@@ -187,6 +188,100 @@ def collapse_to_vertex_palette(obj):
     mesh.materials.clear()
     mesh.materials.append(vertex_palette_material())
 
+def kart_surface_palette_material():
+    """A one-material kart finish library embedded in the GLB.
+
+    The RGB vertex palette remains responsible for DliKarts' deliberately
+    graphic colour blocking.  A 32 x 4 non-colour lookup image supplies only
+    roughness (green) and metallic (blue), selected per face through a tiny UV
+    strip.  This gives painted metal, exposed metal, plastic and rubber their
+    own readable response without adding material primitives/draw calls.
+    """
+    global KART_SURFACE_PALETTE
+    try:
+        if KART_SURFACE_PALETTE and KART_SURFACE_PALETTE.name in bpy.data.materials:
+            return KART_SURFACE_PALETTE
+    except ReferenceError:
+        KART_SURFACE_PALETTE = None
+
+    KART_SURFACE_PALETTE = mat('MAT_kart_surface_profiles', (1, 1, 1), 0, 0.6)
+    tree = KART_SURFACE_PALETTE.node_tree
+    bsdf = tree.nodes.get('Principled BSDF')
+    vertex_colour = tree.nodes.get('DlicomPalette') or tree.nodes.new('ShaderNodeVertexColor')
+    vertex_colour.name = 'DlicomPalette'
+    vertex_colour.layer_name = 'Col'
+    tree.links.new(vertex_colour.outputs['Color'], bsdf.inputs['Base Color'])
+
+    image = bpy.data.images.get('TEX_kart_surface_profiles')
+    if not image:
+        image = bpy.data.images.new('TEX_kart_surface_profiles', width=32, height=4, alpha=True)
+    image.colorspace_settings.name = 'Non-Color'
+    # R is unused. G is roughness; B is metallic.  The six equal profile bands
+    # are intentionally broad so nearest-neighbour sampling is robust in glTF.
+    profiles = (
+        (0.42, 0.00), # moulded black plastic / body shell
+        (0.30, 0.55), # red painted metal
+        (0.20, 0.90), # exposed steering / bumper metal
+        (0.92, 0.00), # tire sidewall rubber
+        (0.80, 0.00), # restrained ash tread channels
+        (0.22, 0.00), # glossy lamp and mushroom cream plastic
+    )
+    pixels = []
+    for y in range(4):
+        for x in range(32):
+            profile_index = min(len(profiles) - 1, int(x * len(profiles) / 32))
+            roughness, metallic = profiles[profile_index]
+            pixels.extend((0.0, roughness, metallic, 1.0))
+    image.pixels = pixels
+    image.pack()
+
+    texture = tree.nodes.get('KartSurfaceProfiles') or tree.nodes.new('ShaderNodeTexImage')
+    texture.name = 'KartSurfaceProfiles'
+    texture.image = image
+    texture.interpolation = 'Closest'
+    separate = tree.nodes.get('KartSurfaceMR') or tree.nodes.new('ShaderNodeSeparateRGB')
+    separate.name = 'KartSurfaceMR'
+    tree.links.new(texture.outputs['Color'], separate.inputs['Image'])
+    tree.links.new(separate.outputs['G'], bsdf.inputs['Roughness'])
+    tree.links.new(separate.outputs['B'], bsdf.inputs['Metallic'])
+    return KART_SURFACE_PALETTE
+
+def collapse_to_kart_surface_palette(obj):
+    """Bake old construction materials into colour plus physical profile UVs."""
+    mesh = obj.data
+    colors = mesh.vertex_colors.get('Col') or mesh.vertex_colors.new(name='Col')
+    uv_layer = mesh.uv_layers.get('KartSurface') or mesh.uv_layers.new(name='KartSurface')
+    source = list(mesh.materials)
+    profile_u = {
+        'plastic': 2.5 / 32.0,
+        'paint': 8.0 / 32.0,
+        'metal': 13.5 / 32.0,
+        'rubber': 18.5 / 32.0,
+        'tread': 24.0 / 32.0,
+        'lamp': 29.0 / 32.0,
+    }
+    for poly in mesh.polygons:
+        material = source[poly.material_index] if source else None
+        material_name = material.name.lower() if material else ''
+        if 'tread' in material_name:
+            profile = 'tread'
+        elif 'rubber' in material_name:
+            profile = 'rubber'
+        elif 'metal' in material_name:
+            profile = 'metal'
+        elif 'red' in material_name:
+            profile = 'paint'
+        elif 'cream' in material_name or 'white' in material_name:
+            profile = 'lamp'
+        else:
+            profile = 'plastic'
+        rgba = material.diffuse_color[:] if material else (1, 1, 1, 1)
+        for loop_index in poly.loop_indices:
+            colors.data[loop_index].color = rgba
+            uv_layer.data[loop_index].uv = (profile_u[profile], 0.5)
+    mesh.materials.clear()
+    mesh.materials.append(kart_surface_palette_material())
+
 def join_meshes(parts, name):
     bpy.ops.object.select_all(action='DESELECT')
     for obj in parts: obj.select_set(True)
@@ -194,6 +289,15 @@ def join_meshes(parts, name):
     bpy.ops.object.join()
     result=bpy.context.object; result.name=name
     collapse_to_vertex_palette(result)
+    return result
+
+def join_kart_meshes(parts, name):
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in parts: obj.select_set(True)
+    bpy.context.view_layer.objects.active=parts[0]
+    bpy.ops.object.join()
+    result=bpy.context.object; result.name=name
+    collapse_to_kart_surface_palette(result)
     return result
 
 def parent_bone(obj, arm, bone):
@@ -506,6 +610,9 @@ def make_wheel(name, x, y, z, parent, steer=False):
         channels.append(channel)
     hub=cyl('GEO_guatam_kart_'+name+'_hub',(0,0,0),.13,.18,METAL,12,(0,math.pi/2,0)); hub.parent=root
     accent=cyl('GEO_guatam_kart_'+name+'_accent',(0,0.095,0),.058,.015,RED,10,(math.pi/2,0,0)); accent.parent=root
+    # Keep the established black/red/cream colour blocking in the runtime GLB.
+    # The physical-material lookup experiment did not survive this Blender/glTF
+    # export path reliably and washed the vehicle out to white in Three.js.
     join_meshes([tire,hub,accent]+channels, 'GEO_guatam_kart_'+name)
     return pivot,root
 
@@ -525,9 +632,9 @@ def create_kart():
     chassis=cube('GEO_guatam_kart_chassis',(0,0,.48),(1.28,2.34,.36),BLACK,.12); chassis.parent=root
     nose=uv('GEO_guatam_kart_nose',(0,.90,.66),(.52,.54,.30),BLACK,14,8); nose.parent=root
     cockpit=uv('GEO_guatam_kart_cockpit',(0,-.24,.72),(.56,.56,.34),BLACK,14,8); cockpit.parent=root
-    # A lower cushion prevents the driver's torso from perching above the
-    # backrest while keeping the same compact cockpit silhouette.
-    seat=cube('GEO_guatam_kart_seat',(0,-.32,.57),(.58,.50,.22),METAL,.08); seat.parent=root
+    # A lower moulded-plastic cushion prevents the driver's torso from
+    # perching above the backrest while keeping the compact cockpit silhouette.
+    seat=cube('GEO_guatam_kart_seat',(0,-.32,.57),(.58,.50,.22),BLACK,.08); seat.parent=root
     # The taller backrest meets the lowered driver's shoulders. Rear views
     # therefore show only the deliberate head-and-shoulder silhouette.
     back=cube('GEO_guatam_kart_seatback',(0,-.60,1.22),(.58,.12,.64),BLACK,.06); back.rotation_euler=(math.radians(-18),0,0); back.parent=root
@@ -566,7 +673,7 @@ def create_kart():
     steering.rotation_euler=(math.radians(48),0,0)
     # Slightly bolder rim restores clear steering-wheel readability without
     # changing the short, nose-pod-connected fixed column.
-    ring=torus('GEO_guatam_kart_steering_ring',(0,0,0),.23,.045,METAL,(0,0,0),12,5); ring.parent=steering
+    ring=torus('GEO_guatam_kart_steering_ring',(0,0,0),.23,.045,BLACK,(0,0,0),12,5); ring.parent=steering
     # Low-poly spokes make the rotating part unmistakably a steering wheel
     # even while the driver is seated in front of it.  They are local to the
     # same independent runtime node as the rim and hub.
@@ -591,6 +698,9 @@ def create_kart():
     bpy.ops.export_scene.gltf(filepath=KART_GLB, export_format='GLB', use_selection=True, export_yup=True,
                               export_apply=True, export_animations=False, export_materials=True)
 
-create_character()
-create_kart()
+build_target=os.environ.get('DLIKARTS_BUILD', 'all').lower()
+if build_target in ('all', 'character'):
+    create_character()
+if build_target in ('all', 'kart'):
+    create_kart()
 print('GUATAM BUILD COMPLETE')
