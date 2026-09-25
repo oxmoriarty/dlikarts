@@ -1,0 +1,2 @@
+# Blender's automatic previous-save backups stay local and are not runtime assets.
+*.blend1

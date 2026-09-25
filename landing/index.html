@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07101b" />
+    <title>DliKarts — Race. Play. Repeat.</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./responsive.css" />
+  </head>
+  <body>
+    <main class="garage-shell">
+      <section class="splash" id="splash" aria-label="Loading DliKarts">
+        <div class="splash-track" aria-hidden="true"></div>
+        <p class="eyebrow">DLICOM RACERS PRESENTS</p>
+        <h1>DLI<span>KARTS</span></h1>
+        <p class="tagline">RACE. PLAY. REPEAT.</p>
+        <div class="loadline" aria-hidden="true"><i></i></div>
+        <button class="quiet-button" id="skip-intro">SKIP INTRO</button>
+      </section>
+
+      <section class="menu-screen" id="menu-screen" aria-label="DliKarts main menu" hidden>
+        <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+        <header class="topbar">
+          <a class="wordmark" href="./" aria-label="DliKarts home">DLI<span>KARTS</span></a>
+          <button class="icon-button" id="open-settings" aria-label="Open settings">⚙</button>
+        </header>
+
+        <div class="menu-layout">
+          <div class="hero-copy">
+            <p class="eyebrow">SEASON ZERO / VERTICAL SLICE</p>
+            <h2>READY TO<br /><em>RACE?</em></h2>
+            <p class="hero-description">Pick your driver, hit the road, and make every corner count.</p>
+            <div class="menu-actions" aria-label="Main actions">
+              <button class="primary-button" id="open-racers">PLAY <span>→</span></button>
+              <button class="secondary-button" id="open-howto">HOW TO RACE</button>
+              <button class="secondary-button" id="open-settings-copy">SETTINGS</button>
+            </div>
+          </div>
+
+          <div class="poster" aria-label="Guatam, first available DliKarts racer">
+            <div class="poster-checker" aria-hidden="true"></div>
+            <p class="poster-kicker">FIRST DRIVER ONLINE</p>
+            <img src="../references/Guatam/Guatam.png" alt="Guatam character reference art" />
+            <div class="poster-name"><span>01</span> GUATAM</div>
+            <p class="poster-note">THE FULL SIX-RACER COVER ARRIVES WITH THE COMPLETE ROSTER.</p>
+          </div>
+        </div>
+
+        <footer><span>© DLIKARTS</span><span>BEST PLAYED IN LANDSCAPE ON MOBILE</span><a href="../prototype/">ASSET VIEWER</a></footer>
+      </section>
+
+      <section class="panel racers-panel" id="racers-panel" aria-labelledby="racer-title" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">CHOOSE YOUR DRIVER</p><h2 id="racer-title">PICK A <em>RACER</em></h2></div><button class="close-button" data-close aria-label="Close racer selection">×</button></div>
+        <div class="racer-grid">
+          <button class="racer-card selected" data-racer="guatam" aria-pressed="true"><span class="driver-number">01</span><img src="../references/Guatam/Guatam.png" alt="Guatam" /><strong>GUATAM</strong><small>BALANCED / AVAILABLE</small></button>
+          <div class="racer-card locked"><span class="driver-number">02</span><strong>JUST SAM</strong><small>RACER INCOMING</small></div>
+          <div class="racer-card locked"><span class="driver-number">03</span><strong>KAPURIYA</strong><small>RACER INCOMING</small></div>
+          <div class="racer-card locked"><span class="driver-number">04</span><strong>QUANG</strong><small>RACER INCOMING</small></div>
+          <div class="racer-card locked"><span class="driver-number">05</span><strong>RETREE</strong><small>RACER INCOMING</small></div>
+          <div class="racer-card locked"><span class="driver-number">06</span><strong>TIMUR</strong><small>RACER INCOMING</small></div>
+        </div>
+        <div class="selection-footer"><p id="selection-message">GUATAM IS READY TO RACE.</p><button class="primary-button" id="launch-game">RACE AS GUATAM <span>→</span></button></div>
+      </section>
+
+      <section class="panel info-panel" id="howto-panel" aria-labelledby="howto-title" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">DRIVER BRIEFING</p><h2 id="howto-title">HOW TO <em>RACE</em></h2></div><button class="close-button" data-close aria-label="Close instructions">×</button></div>
+        <div class="howto-grid"><article><b>01</b><h3>KEEP MOVING</h3><p>Use W / ↑ to accelerate. S / ↓ brakes and reverses.</p></article><article><b>02</b><h3>DRIFT SMART</h3><p>Hold Space while steering through a corner, then release for a boost.</p></article><article><b>03</b><h3>USE ITEMS</h3><p>Collect track pickups and press E to activate your current item.</p></article><article><b>04</b><h3>STAY ON TRACK</h3><p>Off-road surfaces slow you down. Press R if you need a recovery.</p></article></div>
+        <p class="touch-note">ON MOBILE: AUTO-ACCELERATION IS ON. USE THE LARGE LEFT, RIGHT, DRIFT, BRAKE, AND ITEM BUTTONS.</p>
+      </section>
+
+      <section class="panel settings-panel" id="settings-panel" aria-labelledby="settings-title" hidden>
+        <div class="panel-heading"><div><p class="eyebrow">PIT GARAGE</p><h2 id="settings-title">RACE <em>SETTINGS</em></h2></div><button class="close-button" data-close aria-label="Close settings">×</button></div>
+        <div class="settings-list"><label><span>MUSIC <small>READY FOR THE FINAL AUDIO MIX</small></span><input type="range" id="music-volume" min="0" max="100" value="70" /><output for="music-volume">70%</output></label><label><span>SFX <small>READY FOR THE FINAL AUDIO MIX</small></span><input type="range" id="sfx-volume" min="0" max="100" value="80" /><output for="sfx-volume">80%</output></label><label><span>QUALITY</span><select id="quality-choice"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label></div>
+        <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO CONTROLS ARE READY FOR THE UPCOMING GAME AUDIO PASS.</p>
+      </section>
+    </main>
+    <script type="module" src="./menu.js"></script>
+  </body>
+</html>

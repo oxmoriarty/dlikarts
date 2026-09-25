@@ -4,7 +4,7 @@
   "redirects": [
     {
       "source": "/",
-      "destination": "/game/",
+      "destination": "/landing/",
       "permanent": false
     }
   ]
