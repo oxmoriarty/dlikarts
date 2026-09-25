@@ -68,7 +68,15 @@ function createGame(characterGltf, kartGltf) {
   return { track, racers, player: racers[0], playerAI: new RacingLineAI(racers[0], track, 0), race, powerups, cameraTarget: new THREE.Vector3(), cameraPosition: new THREE.Vector3(), clock: 0 };
 }
 
-document.querySelector('#start-race').addEventListener('click', () => { if (!game) return; document.querySelector('#start').classList.add('hidden'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
+function requestMobileFullscreen() {
+  const mobileLayout = matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
+  const target = document.documentElement;
+  const request = target.requestFullscreen || target.webkitRequestFullscreen;
+  if (!mobileLayout || document.fullscreenElement || !request) return;
+  try { request.call(target)?.catch?.(() => {}); } catch { /* Browser declined fullscreen. */ }
+}
+
+document.querySelector('#start-race').addEventListener('click', () => { if (!game) return; requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
 
 function resolveKartCollisions(racers) {
   for (let i = 0; i < racers.length; i += 1) for (let j = i + 1; j < racers.length; j += 1) {

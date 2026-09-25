@@ -31,10 +31,12 @@ export class ArcadeKart {
     const forwardInput = input.throttle || 0, brake = input.brake || 0, steer = input.steer || 0;
     const boost = this.boostTimer > 0; if (boost) this.boostTimer -= dt;
     const maxSpeed = this.offRoad ? this.tuning.offRoadMaxSpeed : this.tuning.maxSpeed;
-    if (forwardInput > 0) this.speed += this.tuning.acceleration * forwardInput * dt;
+    // BRAKE has deliberate priority. This removes the old mobile case where
+    // automatic acceleration kept counteracting a held brake at zero speed.
+    if (forwardInput > 0 && brake <= 0) this.speed += this.tuning.acceleration * forwardInput * dt;
     if (boost) this.speed += this.tuning.boostAcceleration * dt;
     if (brake > 0) {
-      if (this.speed > .5) this.speed -= this.tuning.brakeDeceleration * brake * dt;
+      if (this.speed > 0) this.speed = Math.max(0, this.speed - this.tuning.brakeDeceleration * brake * dt);
       else this.speed -= this.tuning.reverseAcceleration * brake * dt;
     }
     const drag = this.offRoad ? this.tuning.offRoadDrag : this.tuning.rollingDrag;

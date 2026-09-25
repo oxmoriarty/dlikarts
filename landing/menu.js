@@ -8,6 +8,14 @@ function revealMenu() {
   window.setTimeout(() => { splash.hidden = true; menu.hidden = false; menu.classList.add('entered'); }, 460);
 }
 
+function requestMobileFullscreen() {
+  const mobileLayout = matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
+  const target = document.documentElement;
+  const request = target.requestFullscreen || target.webkitRequestFullscreen;
+  if (!mobileLayout || document.fullscreenElement || !request) return;
+  try { request.call(target)?.catch?.(() => {}); } catch { /* Browser declined fullscreen. */ }
+}
+
 function openPanel(panelId) {
   panels.forEach(panel => { panel.hidden = panel.id !== panelId; });
   document.querySelector(`#${panelId}`).querySelector('button, input, select')?.focus();
@@ -19,11 +27,11 @@ function persistSetting(key, value) { localStorage.setItem(`dlikarts.${key}`, va
 function loadSetting(key, input, fallback) { const value = localStorage.getItem(`dlikarts.${key}`) ?? fallback; input.value = value; syncOutput(input); }
 function syncOutput(input) { const output = document.querySelector(`output[for="${input.id}"]`); if (output) output.textContent = `${input.value}%`; }
 
-document.querySelector('#skip-intro').addEventListener('click', revealMenu);
+document.querySelector('#skip-intro').addEventListener('click', () => { requestMobileFullscreen(); revealMenu(); });
 window.setTimeout(revealMenu, 2100);
-document.querySelector('#open-racers').addEventListener('click', () => openPanel('racers-panel'));
-document.querySelector('#open-howto').addEventListener('click', () => openPanel('howto-panel'));
-document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', () => openPanel('settings-panel')));
+document.querySelector('#open-racers').addEventListener('click', () => { requestMobileFullscreen(); openPanel('racers-panel'); });
+document.querySelector('#open-howto').addEventListener('click', () => { requestMobileFullscreen(); openPanel('howto-panel'); });
+document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', () => { requestMobileFullscreen(); openPanel('settings-panel'); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
 document.querySelector('#launch-game').addEventListener('click', () => { location.href = '../game/'; });
 document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => {

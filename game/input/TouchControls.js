@@ -10,8 +10,13 @@ export class TouchControls {
     addEventListener('visibilitychange', () => { if (document.hidden) this.held.clear(); });
   }
   update() {
-    const h = this.held; const coarse = matchMedia('(pointer: coarse)').matches;
-    if (!coarse) return;
-    this.input.throttle = 1; this.input.brake = h.has('brake') ? 1 : 0; this.input.steer = (h.has('right') ? 1 : 0) - (h.has('left') ? 1 : 0); this.input.drift = h.has('drift') || (h.has('brake') && this.input.throttle > 0);
+    const h = this.held; const touchLayout = matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
+    if (!touchLayout) return;
+    // Touch driving intentionally mirrors keyboard driving: acceleration is
+    // held by the player, while BRAKE first stops and then reverses the kart.
+    this.input.throttle = h.has('accelerate') ? 1 : 0;
+    this.input.brake = h.has('brake') ? 1 : 0;
+    this.input.steer = (h.has('right') ? 1 : 0) - (h.has('left') ? 1 : 0);
+    this.input.drift = h.has('drift');
   }
 }

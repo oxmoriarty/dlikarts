@@ -2,8 +2,9 @@
 
 :root { --ink:#07101b; --panel:#0e1c2d; --line:#29445c; --blue:#55adff; --red:#ff3e26; --cream:#f6ebd7; --text:#dce9f2; --muted:#85a2b8; }
 * { box-sizing: border-box; }
-body { margin:0; min-width:320px; color:var(--text); background:#07101b; font-family:"IBM Plex Mono", monospace; }
-.garage { height:100vh; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 350px; background:radial-gradient(circle at 78% 8%,#183f6b 0,transparent 32%),linear-gradient(135deg,#07101b,#0a1624 58%,#07101b); }
+html,body { height:100%; height:100dvh; overflow:hidden; overscroll-behavior:none; }
+body { margin:0; min-width:320px; color:var(--text); background:#07101b; font-family:"IBM Plex Mono", monospace; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.garage { height:100vh; height:100dvh; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) 350px; background:radial-gradient(circle at 78% 8%,#183f6b 0,transparent 32%),linear-gradient(135deg,#07101b,#0a1624 58%,#07101b); }
 .viewport-wrap { min-height:0; position:relative; overflow:hidden; background:radial-gradient(ellipse at 50% 65%,rgba(252,87,48,.12),transparent 38%),repeating-linear-gradient(90deg,transparent 0 79px,rgba(138,187,230,.045) 80px),repeating-linear-gradient(0deg,transparent 0 79px,rgba(138,187,230,.045) 80px); }
 #viewport { width:100%; height:100%; display:block; touch-action:none; outline:none; }
 .viewport-badge,.hint { position:absolute; left:24px; letter-spacing:.08em; text-transform:uppercase; font-size:10px; color:#b8d6e7; pointer-events:none; }
@@ -30,5 +31,5 @@ button:hover,button.active { background:var(--red); border-color:var(--red); col
 .stat-head button { font-size:8px; padding:4px 6px; }
 pre { min-height:103px; margin:12px 0 0; color:#c7d8e5; font:10px/1.7 "IBM Plex Mono",monospace; white-space:pre-wrap; }
 footer { color:#53748d; font-size:9px; letter-spacing:.06em; }
-@media (max-width:760px) { .garage { height:auto; min-height:100svh; grid-template-columns:1fr; grid-template-rows:minmax(52vh, 64vh) auto; } .viewport-wrap { min-height:0; } .console { border-left:0; border-top:1px solid var(--line); padding:22px 18px; } h1 { font-size:44px; } .controls-grid { grid-template-columns:repeat(3,1fr); gap:10px; } }
+@media (max-width:760px) { .garage { height:100dvh; min-height:0; grid-template-columns:1fr; grid-template-rows:minmax(52dvh, 64dvh) minmax(0,1fr); } .viewport-wrap { min-height:0; } .console { border-left:0; border-top:1px solid var(--line); padding:22px 18px; overscroll-behavior:contain; } h1 { font-size:44px; } .controls-grid { grid-template-columns:repeat(3,1fr); gap:10px; } }
 @media (max-width:460px) { .controls-grid { grid-template-columns:1fr; gap:12px; } .viewport-badge { left:14px; top:14px; } .hint { left:14px; bottom:12px; } }
