@@ -4,13 +4,13 @@ import { FixedStepLoop } from './core/FixedStepLoop.js';
 import { InputState } from './input/InputState.js';
 import { KeyboardInput } from './input/KeyboardInput.js';
 import { TouchControls } from './input/TouchControls.js';
-import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=shield-and-checkers';
-import { SwitchbackYard } from './track/SwitchbackYard.js?v=visible-checkers';
+import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=corner-recovery-1';
+import { SwitchbackYard } from './track/SwitchbackYard.js?v=competitive-cpu-2';
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=ground-grid-5i';
 import { KartVisual } from './vehicle/KartVisual.js';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
-import { RacingLineAI } from './ai/RacingLineAI.js?v=cpu-powerups';
-import { PowerupSystem } from './powerups/PowerupSystem.js?v=vertical-zipcap';
+import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
+import { PowerupSystem } from './powerups/PowerupSystem.js?v=competitive-cpu-2';
 import { UI } from './ui/UI.js?v=lap-banner';
 
 const canvas = document.querySelector('#game');
@@ -56,8 +56,12 @@ function createGame(characterGltf, kartGltf) {
   const playerKart = new ArcadeKart('player', KART_TUNING, track.getGridPose(0));
   const playerVisual = new KartVisual(playerKart, kartGltf.scene.clone(true), characterGltf.scene, characterGltf.animations); scene.add(playerVisual.root);
   racers.push({ id: 'guatam', player: true, kart: playerKart, visual: playerVisual });
+  // Skilled CPU pilots use the same engine, acceleration and top-speed limits
+  // as Guatam, with only enough high-speed steering response to follow the
+  // broad road safely instead of treating every bend as a wall.
+  const cpuKartTuning = { ...KART_TUNING, steerRate: 2.14, highSpeedSteerFactor: .52 };
   for (let i = 0; i < 4; i += 1) {
-    const kart = new ArcadeKart(`cpu-${i}`, KART_TUNING, track.getGridPose(i + 1)); const model = kartGltf.scene.clone(true); shadowify(model);
+    const kart = new ArcadeKart(`cpu-${i}`, cpuKartTuning, track.getGridPose(i + 1)); const model = kartGltf.scene.clone(true); shadowify(model);
     // Test pilots deliberately retain the approved Guatam kart palette. The
     // old colored head-marker spheres made these shared karts look recolored.
     const visual = new KartVisual(kart, model); scene.add(visual.root);
@@ -118,7 +122,7 @@ function update(dt) {
   const playerActions = autoplaySmokeTest ? game.playerAI.update(dt) : input;
   if (autoplaySmokeTest && playerActions.useItem && enabled) powerups.use(player);
   player.kart.update(dt, playerActions, track, enabled && race.state === 'RACING');
-  for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt); if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
+  for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt, racers, powerups); if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
   resolveKartCollisions(racers); powerups.update(dt, racers); race.update(dt);
   track.setFinalLapVisual(previewFinish || player.lap >= LAPS - 1);
   retireFinishedCpuVisuals(dt, racers); racers.forEach(racer => { if (!racer.retired) racer.visual.update(dt); });

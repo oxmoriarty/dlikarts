@@ -1,15 +1,15 @@
 import * as THREE from 'three';
-import { KART_TUNING } from '../config/game-config.js';
+import { KART_TUNING } from '../config/game-config.js?v=competitive-cpu-2';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const clamp = THREE.MathUtils.clamp;
 
 export class SwitchbackYard {
   constructor(scene) {
-    // At 12 m this comfortably holds four 1.6 m karts abreast with clear
-    // lateral breathing room, while the five-kart vertical slice launches
-    // as a tidy 3+2 staggered grid.
-    this.width = 12;
+    // Add one complete kart lane to the former four-abreast road. At 14.4 m,
+    // the five-racer slice has room to launch 4+1, pass safely, and still
+    // retain the clear curb/pavement boundary on both sides.
+    this.width = 14.4;
     this.roadSurfaceOffset = .02;
     this.kartWheelGroundOffset = Number.isFinite(KART_TUNING.wheelGroundOffset) ? KART_TUNING.wheelGroundOffset : 0;
     this.gridLaneSpacing = 2.65;
@@ -126,7 +126,7 @@ export class SwitchbackYard {
       makeRibbon(`CURB_${side < 0 ? 'LEFT' : 'RIGHT'}`, roadEdge, curbOuter, .18, this.roadSurfaceOffset, curbMat, true);
       makeRibbon(`PAVEMENT_${side < 0 ? 'LEFT' : 'RIGHT'}`, curbOuter, pavementOuter, this.roadSurfaceOffset + .01, this.roadSurfaceOffset + .01, pavementMat, false);
     }
-    const terrain = new THREE.Mesh(new THREE.CircleGeometry(106, 64), new THREE.MeshStandardMaterial({ color: 0x315744, roughness: 1 })); terrain.rotation.x = -Math.PI / 2; terrain.position.y = -.04; terrain.receiveShadow = true; this.scene.add(terrain);
+    const terrain = new THREE.Mesh(new THREE.CircleGeometry(118, 64), new THREE.MeshStandardMaterial({ color: 0x315744, roughness: 1 })); terrain.rotation.x = -Math.PI / 2; terrain.position.y = -.04; terrain.receiveShadow = true; this.scene.add(terrain);
     const stripeMat = new THREE.MeshBasicMaterial({ color: 0xffd45b });
     for (let i = 0; i < this.samples.length; i += 15) {
       const s = this.samples[i]; const stripe = new THREE.Mesh(new THREE.BoxGeometry(.16, .025, 1.0), stripeMat); stripe.position.copy(s.p).add(new THREE.Vector3(0,.05,0)); stripe.rotation.y = Math.atan2(s.tangent.x, s.tangent.z); this.scene.add(stripe);

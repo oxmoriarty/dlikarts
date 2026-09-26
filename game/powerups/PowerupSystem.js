@@ -101,7 +101,10 @@ export class PowerupSystem {
   }
   addPickup(progress, index) {
     const type = TYPES[index % 3]; const s = this.track.sampleAt(progress); const mesh = createPickupModel(type);
-    mesh.position.copy(s.p).addScaledVector(s.normal, index % 2 ? 1.2 : -1.2); mesh.position.y += .62; mesh.castShadow = true; this.scene.add(mesh); this.pickups.push({ progress, type: TYPES[index % 3], mesh, baseY: mesh.position.y, timer: 0 });
+    // Spread item boxes across the wider circuit so all five lanes have a
+    // sensible collection opportunity rather than rewarding only the center.
+    const pickupLanes = [-3.2, 0, 3.2, -2.1, 2.1, 0];
+    mesh.position.copy(s.p).addScaledVector(s.normal, pickupLanes[index]); mesh.position.y += .62; mesh.castShadow = true; this.scene.add(mesh); this.pickups.push({ progress, type: TYPES[index % 3], mesh, baseY: mesh.position.y, timer: 0 });
   }
   createProjectile() {
     const mesh = createMascotPickup(); mesh.name = 'PROJECTILE_DILI_MASCOT'; mesh.scale.setScalar(.72); mesh.visible = false; this.scene.add(mesh);
@@ -137,6 +140,20 @@ export class PowerupSystem {
     // spin or curve after firing.
     projectile.mesh.rotation.set(0, Math.atan2(launchDirection.x, launchDirection.z), 0);
     return true;
+  }
+  isProjectileThreat(racer) {
+    // A shield is saved for a real incoming missile rather than activated as
+    // soon as the CPU happens to pick it up. This keeps Halo Guard useful and
+    // gives every racer meaningful counterplay against Rattle Pod attacks.
+    for (const projectile of this.projectiles.items) {
+      if (!projectile.active || projectile.owner === racer) continue;
+      const toRacer = racer.kart.position.clone().sub(projectile.mesh.position).setY(0);
+      const forwardDistance = toRacer.dot(projectile.direction);
+      if (forwardDistance < 0 || forwardDistance > projectile.speed * 1.1) continue;
+      const lateralDistanceSq = toRacer.lengthSq() - forwardDistance * forwardDistance;
+      if (lateralDistanceSq < 2.1) return true;
+    }
+    return false;
   }
   updateGuard(racer) {
     let ring = this.rings.get(racer); if (racer.kart.guardTimer > 0) { if (!ring) { ring = createHaloShield(); this.scene.add(ring); this.rings.set(racer, ring); } ring.visible = true; ring.position.copy(racer.kart.position).add(new THREE.Vector3(0,1.0,0)); ring.rotation.y += .06; } else if (ring) ring.visible = false;

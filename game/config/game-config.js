@@ -8,6 +8,37 @@ export const POWERUP_TUNING = Object.freeze({
   haloGuardSeconds: 7,
 });
 
+// CPU pilots use the same arcade controller as the player. These values only
+// decide intent (racing line, braking, overtaking and item timing), keeping
+// their handling competitive without giving them physics-only advantages.
+export const CPU_TUNING = Object.freeze({
+  // CPU drivers have the same 20 m/s physical cap as Guatam. These values
+  // let them carry competitive speed through the broad test circuit instead
+  // of braking to a crawl at every gentle curve.
+  baseTargetSpeed: 20,
+  minimumCornerSpeed: 11.5,
+  curveSpeedPenalty: 48,
+  angleSpeedPenalty: 5,
+  steeringGain: 1.3,
+  trafficLookAhead: 8.5,
+  trafficClearance: 2.25,
+  trafficAvoidDistance: 4.6,
+  trafficPredictionSeconds: 0.65,
+  laneChangeSpeed: 2.8,
+  edgeLaneChangeSpeed: 6.5,
+  launchSettleSeconds: 1.8,
+  edgeLateralRatio: .28,
+  rejoinLookAhead: .009,
+  edgeTargetSpeed: 8.5,
+  tightTurnSpeed: 11.5,
+  offRoadRecoverySeconds: 0.7,
+  stuckRecoverySeconds: 1.25,
+  pickupLookAhead: 0.085,
+  pickupWeight: 5.5,
+  itemCooldown: 0.9,
+  projectileRange: 23,
+});
+
 export const KART_TUNING = Object.freeze({
   acceleration: 13.5,
   boostAcceleration: 20,
@@ -37,7 +68,7 @@ export const KART_TUNING = Object.freeze({
   // The approved kart root is its ground projection.  Keep it directly on
   // the road surface so the tire contact reads firmly rather than floating.
   wheelGroundOffset: 0,
-  collisionRadius: 0.72,
+  collisionRadius: 1.0,
   cpuFinishExitDelay: 0.8,
   recoverySeconds: 1.2,
 });
