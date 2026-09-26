@@ -12,6 +12,7 @@ import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=competitive-cpu-2';
 import { UI } from './ui/UI.js?v=lap-banner';
+import { DlicomCity } from './environment/DlicomCity.js?v=city-clearance-1';
 
 const canvas = document.querySelector('#game');
 const ui = new UI();
@@ -27,10 +28,10 @@ const loader = new GLTFLoader();
 const input = new InputState(); const keyboardInput = new KeyboardInput(input); const touchInput = new TouchControls(input);
 const autoplaySmokeTest = new URLSearchParams(location.search).has('autoplay');
 const previewFinish = new URLSearchParams(location.search).has('previewFinish');
-let game = null; let frameSamples = []; let lastRender = performance.now(); let qualityProfile;
+let game = null; let city = null; let frameSamples = []; let lastRender = performance.now(); let qualityProfile;
 
 function applyQuality(name) {
-  profileName = name; qualityProfile = QUALITY_PROFILES[name]; renderer.setPixelRatio(Math.min(devicePixelRatio, qualityProfile.dpr)); renderer.shadowMap.enabled = qualityProfile.shadows; sun.shadow.mapSize.set(qualityProfile.shadowSize || 512, qualityProfile.shadowSize || 512);
+  profileName = name; qualityProfile = QUALITY_PROFILES[name]; renderer.setPixelRatio(Math.min(devicePixelRatio, qualityProfile.dpr)); renderer.shadowMap.enabled = qualityProfile.shadows; sun.shadow.mapSize.set(qualityProfile.shadowSize || 512, qualityProfile.shadowSize || 512); city?.setQuality(name);
 }
 applyQuality(profileName); ui.onQuality = applyQuality;
 
@@ -52,7 +53,7 @@ async function boot() {
 }
 
 function createGame(characterGltf, kartGltf) {
-  const track = new SwitchbackYard(scene); const racers = [];
+  const track = new SwitchbackYard(scene); city = new DlicomCity(scene, track, profileName); const racers = [];
   const playerKart = new ArcadeKart('player', KART_TUNING, track.getGridPose(0));
   const playerVisual = new KartVisual(playerKart, kartGltf.scene.clone(true), characterGltf.scene, characterGltf.animations); scene.add(playerVisual.root);
   racers.push({ id: 'guatam', player: true, kart: playerKart, visual: playerVisual });
@@ -136,7 +137,7 @@ function updateCamera(dt) {
 
 function render() {
   if (!game) return; const now = performance.now(); const delta = now - lastRender; lastRender = now; frameSamples.push(delta); if (frameSamples.length > 30) frameSamples.shift(); updateCamera(1/60);
-  const info = renderer.info.render; const avg = frameSamples.reduce((a,b)=>a+b,0) / frameSamples.length; ui.update(game.race, game.player, { fps: Math.round(1000 / avg), ms: avg.toFixed(1), calls: info.calls });
+  const info = renderer.info; const avg = frameSamples.reduce((a,b)=>a+b,0) / frameSamples.length; ui.update(game.race, game.player, { fps: Math.round(1000 / avg), ms: avg.toFixed(1), calls: info.render.calls, triangles: info.render.triangles, geometries: info.memory.geometries, textures: info.memory.textures });
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.render(scene, camera);
 }
 
