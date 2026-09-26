@@ -4,6 +4,22 @@ import { KART_TUNING } from '../config/game-config.js?v=competitive-cpu-2';
 const UP = new THREE.Vector3(0, 1, 0);
 const clamp = THREE.MathUtils.clamp;
 
+function textTexture(text) {
+  const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
+  const context = canvas.getContext('2d'); context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#ffffff'; context.font = '700 82px sans-serif'; context.textAlign = 'center'; context.textBaseline = 'middle'; context.fillText(text, 256, 66);
+  const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; return texture;
+}
+
+function cutoutTexture(relativePath) {
+  const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+  const context = canvas.getContext('2d'); const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+  const image = new Image();
+  image.addEventListener('load', () => { context.clearRect(0, 0, 256, 256); const scale = Math.min(256 / image.width, 256 / image.height); const width = image.width * scale, height = image.height * scale; context.drawImage(image, (256 - width) / 2, (256 - height) / 2, width, height); texture.needsUpdate = true; });
+  image.src = new URL(relativePath, import.meta.url).href;
+  return texture;
+}
+
 export class SwitchbackYard {
   constructor(scene) {
     // Add one complete kart lane to the former four-abreast road. At 14.4 m,
@@ -34,6 +50,11 @@ export class SwitchbackYard {
       new THREE.Vector3(-55, .2, -58), new THREE.Vector3(-20, 0, -58),
     ], true, 'centripetal');
     this.finishGantry = null;
+    this.gatewayBranding = {
+      word: new THREE.MeshBasicMaterial({ map: textTexture('DLICOM'), transparent: true, side: THREE.DoubleSide, depthWrite: false }),
+      logo: new THREE.MeshBasicMaterial({ map: cutoutTexture('../../assets/environment/branding/dlicom-logo-cutout.png'), transparent: true, side: THREE.DoubleSide, depthWrite: false }),
+      mascot: new THREE.MeshBasicMaterial({ map: cutoutTexture('../../assets/environment/branding/dlicom-mascot-cutout.png'), transparent: true, side: THREE.DoubleSide, depthWrite: false }),
+    };
     this.buildSamples(); this.buildVisuals();
     this.jumpStart = .43; this.jumpEnd = .47;
   }
@@ -140,9 +161,46 @@ export class SwitchbackYard {
       this.finishGantry = this.createFinishGantry(s);
       return;
     }
-    const height = index === 0 ? 4.35 : 2.55;
-    for (const side of [-1, 1]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(.12,.16,height,8), mat); post.position.copy(s.p).addScaledVector(s.normal, side * (this.width / 2 - .25)); post.position.y += height / 2; this.scene.add(post); }
-    const arch = new THREE.Mesh(new THREE.BoxGeometry(this.width, .16, .16), mat); arch.position.copy(s.p).add(new THREE.Vector3(0,height,0)); arch.rotation.y = Math.atan2(s.tangent.x, s.tangent.z); this.scene.add(arch);
+    // Regular checkpoints use the same broad, blue Dlicom city gateway
+    // language. Their posts deliberately stand beyond the pavement; only the
+    // non-colliding header spans the road. The checkerboard finish gantry
+    // above is created in the index-0 branch and remains untouched.
+    const gatewayMaterial = new THREE.MeshStandardMaterial({ color: 0x315df4, emissive: 0x102c78, emissiveIntensity: .28, roughness: .48, metalness: .12 });
+    const yaw = Math.atan2(s.tangent.x, s.tangent.z);
+    const postDistance = this.width / 2 + 4.05;
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(.52, 8.0, .52), gatewayMaterial);
+      post.name = `DLICOM_CHECKPOINT_${index}_POST`;
+      post.position.copy(s.p).addScaledVector(s.normal, side * postDistance); post.position.y = 4.0; post.rotation.y = yaw; this.scene.add(post);
+    }
+    const header = new THREE.Mesh(new THREE.BoxGeometry(this.width + 8.1, 2.0, .4), gatewayMaterial);
+    header.name = `DLICOM_CHECKPOINT_${index}_GATEWAY`; header.position.copy(s.p); header.position.y = 7.1; header.rotation.y = yaw; this.scene.add(header);
+    this.addGatewayBranding(s, yaw, index);
+  }
+  addGatewayBranding(sample, yaw, index) {
+    const addDecal = (material, width, height, lateral) => {
+      for (const direction of [-1, 1]) {
+        const decal = new THREE.Mesh(new THREE.PlaneGeometry(width, height), material);
+        decal.name = `DLICOM_CHECKPOINT_${index}_BRANDING`;
+        // Keep the branding just outside the thicker header faces. This
+        // avoids z-fighting or hiding the decals inside the gateway panel.
+        decal.position.copy(sample.p).addScaledVector(sample.normal, lateral).addScaledVector(sample.tangent, direction * .24);
+        // Each side needs its own facing direction; otherwise the reverse
+        // side of a double-sided plane mirrors the DLICOM wordmark.
+        decal.position.y = 7.1; decal.rotation.y = yaw + (direction < 0 ? Math.PI : 0); this.scene.add(decal);
+      }
+    };
+    // Oversized branding remains readable from the racing camera at speed.
+    addDecal(this.gatewayBranding.word, 7.0, 1.35, 0);
+    // Checkpoint 1 uses the official logo, checkpoint 2 uses mirrored mascot
+    // cutouts, then the treatment alternates for the rest of the lap.
+    if (index % 2 === 1) {
+      addDecal(this.gatewayBranding.logo, 1.7, 1.7, -5.15);
+      addDecal(this.gatewayBranding.logo, 1.7, 1.7, 5.15);
+    } else {
+      addDecal(this.gatewayBranding.mascot, 1.8, 1.8, -5.15);
+      addDecal(this.gatewayBranding.mascot, 1.8, 1.8, 5.15);
+    }
   }
   createStartLine(s) {
     // Make the white field a real surface, then add only raised black tiles.

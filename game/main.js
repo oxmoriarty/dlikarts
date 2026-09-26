@@ -5,14 +5,14 @@ import { InputState } from './input/InputState.js';
 import { KeyboardInput } from './input/KeyboardInput.js';
 import { TouchControls } from './input/TouchControls.js';
 import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=corner-recovery-1';
-import { SwitchbackYard } from './track/SwitchbackYard.js?v=competitive-cpu-2';
+import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gateways-4';
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=ground-grid-5i';
 import { KartVisual } from './vehicle/KartVisual.js';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=competitive-cpu-2';
 import { UI } from './ui/UI.js?v=lap-banner';
-import { DlicomCity } from './environment/DlicomCity.js?v=city-clearance-1';
+import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
 
 const canvas = document.querySelector('#game');
 const ui = new UI();

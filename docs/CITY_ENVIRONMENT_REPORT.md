@@ -4,7 +4,7 @@
 
 This pass turns Switchback Yard into a finite, lightweight **Dlicom City Circuit** without changing the road ribbon, checkpoint order, racing-line query, collision policy, kart tuning, power-ups, spawn transforms, camera logic, or recovery logic. `game/environment/DlicomCity.js` is a presentation-only module: it deliberately creates no physics bodies.
 
-Near buildings use a hard clearance of `track.width / 2 + 8.05` from the centreline. This leaves the full roadway, curbs, and sidewalk clear even for the largest modular building; the plaza was also moved outward and reduced in footprint.
+Every candidate building, landmark, and skyline tower now passes a whole-track clearance check: its footprint radius must clear every sampled section of the closed spline beyond the roadway, curbs, sidewalks, and a 2-unit visible setback. This eliminates buildings on the road even where distant parts of the loop run near one another. The plaza uses the same check; lamps, planters, signs, and start-gateway posts are also outside the sidewalk.
 
 ## Environment architecture
 
@@ -12,34 +12,34 @@ The city is generated at runtime from the existing track spline. Placement uses 
 
 1. Existing road, curb, and sidewalk.
 2. Near-track modular city blocks and building facade windows.
-3. Streetlights, trees, planters, and race-direction billboards.
+3. Fixed-interval paired streetlights, roadside utility poles/lines, trees, planters, and race-direction billboards.
 4. The Dlicom HQ, start gateway, and a small mascot plaza.
 5. A no-collision, low-poly background skyline around the outer city.
 
 ## Modular building kit and districts
 
-The runtime kit has eight reusable visual roles: small shop/awning block, narrow block, medium office, apartment-like block, corner block, tall office/tower, Dlicom HQ, and distant skyline tower. Their variation comes from four shared facade colours, a compact window facade, height/depth changes, offset, and track-relative orientation—not unique textures or unique meshes.
+The runtime kit has eight reusable visual roles: **bodega, café, eatery, bank, school, garage, apartments, and offices**, plus Dlicom HQ and distant skyline towers. Selected broad road sections now use paired frontages on both sides: colourful low-/mid-rise facades, storefront glazing, roof trims, awnings, and occasional balcony strips. Their variation comes from a shared palette and compact window texture, height/depth changes, short type signs, offset, and track-relative orientation—not unique heavy meshes.
 
-The lap reads as four visual districts:
+The lap reads as four visual districts, with paired front rows plus a staggered second building row filling every long inter-gateway section while checkpoint and corner clearances remain open:
 
 - **Dlicom Central:** start/finish, HQ, race gateway, taller offices.
 - **Creative Street:** colourful medium-density blocks, awnings, race signage.
 - **Dlicom Plaza:** open treatment, planter/tree rhythm, blue mascot-orb landmark with purple halo.
 - **Outer City:** lower-density foreground blocks with the skyline beyond.
 
-## Dlicom identity and landmarks
+## Branding and landmarks
 
-- **Dlicom HQ:** a distinctive dark-blue tower with a blue crown and `DLICOM CITY` sign.
-- **Start/finish gateway:** blue posts and a branded overhead `DLICOM CITY` panel that preserves existing grid, camera, and checkpoint clearance.
-- **Mascot plaza:** a static blue orb with paired light eyes and a purple halo, based on the supplied branding's compact mascot language rather than an animated NPC.
-- **Billboards:** reusable `DLICOM RACERS` panels and short city/race messaging. Two small procedural 256×64 canvas sign textures are shared by all signs.
+- **Checkpoint gateways only:** the seven regular checkpoints use raised blue Dlicom gateways with taller headers and oversized, racing-readable branding. Odd-numbered gateways show `DLICOM` flanked by two official logos; even-numbered gateways show `DLICOM` flanked by the mascot pair. The separate checkerboard finish gantry remains unchanged. Utility poles and their lowest cable sag are deliberately above the gateway header.
+- **Neutral street scene:** HQ, mascot plaza, Dlicom billboards, and Dlicom city signs are no longer instantiated. The city dressing uses only generic shop labels and a bright, varied streetscape palette.
+- **Urban prop kit:** non-colliding, instanced traffic lights/control boxes, road signs, generic electronic billboards, benches, bins/dumpsters, bollards, bus shelters, meters, mailboxes, tree grates, planters/hedges, fire-escape silhouettes, AC units, scaffolding, subway entries, transformer boxes, and manholes. A high visual-only overpass adds skyline depth without altering the drivable route.
+- **Interaction boundary:** the current prop kit is scenery only. Props do not yet become destructible, solid obstacles, ramps, or steam emitters; those are deliberately deferred to a dedicated gameplay/physics and VFX pass so this environment update does not retune racing.
 
 No supplied `references/environment/` directory was present at implementation time. The environment therefore follows the user-provided Dlicom Figma branding review and the approved game visual language; no third-party city design has been copied.
 
 ## Optimization strategy
 
 - Near city blocks are grouped into four `InstancedMesh` facade batches, plus one window batch and one awning batch.
-- Streetlights, lamp bulbs, trees, planters, and each skyline colour family are instanced.
+- Streetlights use a tapered base and curved inward arm silhouette, while lamp parts, utility poles, utility crossbars, trees, planters, and each skyline colour family are instanced. Utility lines are combined into one lightweight line-segment mesh.
 - Boxes share unit geometry and shared PBR materials; no building interiors, unique materials, high-resolution building textures, or per-prop colliders are used.
 - Skyline buildings are simple no-shadow boxes beyond the primary city layer.
 - City scenery has no collision. Existing curbs/barriers remain responsible for playable boundaries.
@@ -58,6 +58,8 @@ No supplied `references/environment/` directory was present at implementation ti
 The existing vertical-slice report recorded the sparse scene at approximately **59 FPS / 16.9 ms / ~75 draw calls** after stabilisation in its desktop browser test. That historical measurement is useful only as a reference: it predates later track and AI work.
 
 Current in-app-browser desktop validation with five active racers and the city at High showed **~25 FPS / 40.1 ms / 79 draw calls / ~97k visible triangles** at one dense-race sample. An idle scene at the start/finish measured **~60 FPS / 16.5 ms / 48 calls**. These are browser-automation measurements, not real-device benchmarks; the dynamic race result includes all racers and their effects. The triangle count stays inside the High scene budget stated in `TECHNICAL_PLAN.md`; draw calls stay well below its 170-call upper target.
+
+After the dense second building row and urban prop kit, a settled local start-grid sample measured approximately **30 FPS / 33.4 ms / 135 draw calls / 49k visible triangles**. This is still below the 170-call High upper target, but it is an in-app-browser measurement and needs real-device testing before treating it as a mobile performance result.
 
 The procedural city adds no downloaded GLBs or image files. Its two generated sign textures are 256×64 canvases (about 128 KiB uncompressed together before GPU overhead). The code bundle impact is one environment module.
 
