@@ -96,7 +96,7 @@ function createHaloShield() {
 
 export class PowerupSystem {
   constructor(scene, track) {
-    this.scene = scene; this.track = track; this.pickups = []; this.projectiles = new ObjectPool(() => this.createProjectile(), 8); this.rings = new Map();
+    this.scene = scene; this.track = track; this.pickups = []; this.projectiles = new ObjectPool(() => this.createProjectile(), 8); this.rings = new Map(); this.events = [];
     [.075,.19,.31,.55,.70,.84].forEach((progress, i) => this.addPickup(progress, i));
   }
   addPickup(progress, index) {
@@ -117,7 +117,7 @@ export class PowerupSystem {
       // forgiving kart-sized collection volume instead of requiring the root
       // transform to intersect a hovering visual mesh vertically.
       const dx = racer.kart.position.x - pickup.mesh.position.x, dz = racer.kart.position.z - pickup.mesh.position.z;
-      if (dx * dx + dz * dz <= PICKUP_RADIUS * PICKUP_RADIUS) { racer.kart.item = pickup.type; pickup.timer = 5; break; }
+      if (dx * dx + dz * dz <= PICKUP_RADIUS * PICKUP_RADIUS) { racer.kart.item = pickup.type; pickup.timer = 5; this.events.push({ type: 'pickup', racer, powerup: pickup.type }); break; }
     } });
     this.projectiles.items.forEach(projectile => { if (!projectile.active) return; projectile.age += dt;
       // `direction` is captured exactly once on firing. Nothing tracks a
@@ -129,8 +129,8 @@ export class PowerupSystem {
   }
   use(racer) {
     const type = racer.kart.item; if (!type) return false; racer.kart.item = null;
-    if (type === 'ZIPCAP') { racer.kart.boostTimer = Math.max(racer.kart.boostTimer, .85); racer.kart.boostStrength = Math.max(racer.kart.boostStrength, 9); return true; }
-    if (type === 'HALO GUARD') { racer.kart.guardTimer = POWERUP_TUNING.haloGuardSeconds; return true; }
+    if (type === 'ZIPCAP') { racer.kart.boostTimer = Math.max(racer.kart.boostTimer, .85); racer.kart.boostStrength = Math.max(racer.kart.boostStrength, 9); this.events.push({ type: 'use', racer, powerup: type }); return true; }
+    if (type === 'HALO GUARD') { racer.kart.guardTimer = POWERUP_TUNING.haloGuardSeconds; this.events.push({ type: 'use', racer, powerup: type }); return true; }
     const projectile = this.projectiles.acquire(); if (!projectile) return false;
     const launchDirection = racer.kart.forward(new THREE.Vector3()).normalize();
     projectile.active = true; projectile.owner = racer; projectile.age = 0; projectile.mesh.visible = true;
@@ -139,8 +139,10 @@ export class PowerupSystem {
     // The mascot's face points along its fixed launch direction; it does not
     // spin or curve after firing.
     projectile.mesh.rotation.set(0, Math.atan2(launchDirection.x, launchDirection.z), 0);
+    this.events.push({ type: 'use', racer, powerup: type });
     return true;
   }
+  consumeEvents() { const events = this.events; this.events = []; return events; }
   isProjectileThreat(racer) {
     // A shield is saved for a real incoming missile rather than activated as
     // soon as the CPU happens to pick it up. This keeps Halo Guard useful and

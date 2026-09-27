@@ -10,12 +10,14 @@ import { ArcadeKart } from './vehicle/ArcadeKart.js?v=ground-grid-5i';
 import { KartVisual } from './vehicle/KartVisual.js';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
-import { PowerupSystem } from './powerups/PowerupSystem.js?v=competitive-cpu-2';
-import { UI } from './ui/UI.js?v=lap-banner';
+import { PowerupSystem } from './powerups/PowerupSystem.js?v=audio-events-1';
+import { UI } from './ui/UI.js?v=audio-ui-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
+import { AudioManager } from './audio/AudioManager.js';
 
 const canvas = document.querySelector('#game');
 const ui = new UI();
+const audio = new AudioManager(); ui.bindAudio(audio);
 let profileName = chooseQuality(); document.querySelector('#quality').value = profileName;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -47,7 +49,7 @@ async function boot() {
     assertAsset(kartGltf.scene, ['DRIVER_SEAT','CAMERA_TARGET','WHEEL_FL','WHEEL_FR','WHEEL_RL','WHEEL_RR','STEER_WHEEL_FL','STEER_WHEEL_FR','STEERING_WHEEL'], 'Guatam kart');
     shadowify(characterGltf.scene); shadowify(kartGltf.scene);
     game = createGame(characterGltf, kartGltf);
-    ui.hideLoading(); document.querySelector('#start').classList.remove('hidden');
+    ui.hideLoading(); document.querySelector('#start').classList.remove('hidden'); audio.playMusic('menu');
     new FixedStepLoop({ update, render }).start();
   } catch (error) { console.error(error); document.querySelector('#loading').innerHTML = `<div class="brand">LOAD<span>ERROR</span></div><p>${error.message}</p>`; }
 }
@@ -81,7 +83,7 @@ function requestMobileFullscreen() {
   try { request.call(target)?.catch?.(() => {}); } catch { /* Browser declined fullscreen. */ }
 }
 
-document.querySelector('#start-race').addEventListener('click', () => { if (!game) return; requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
+document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
 
 function resolveKartCollisions(racers) {
   for (let i = 0; i < racers.length; i += 1) for (let j = i + 1; j < racers.length; j += 1) {
@@ -92,6 +94,7 @@ function resolveKartCollisions(racers) {
     const dx = b.position.x - a.position.x, dz = b.position.z - a.position.z; const d2 = dx*dx + dz*dz; const min = a.tuning.collisionRadius + b.tuning.collisionRadius;
     if (d2 && d2 < min * min) {
       const d = Math.sqrt(d2), push = min - d, nx = dx / d, nz = dz / d;
+      if (a === game?.player.kart || b === game?.player.kart) audio.reportCollision(Math.abs(a.speed - b.speed) + push * 7);
       // Guarded karts cannot be displaced, slowed, or stunned by another
       // racer's kart. The attacking kart is the only one pushed away.
       if (a.guardTimer > 0 && b.guardTimer > 0) continue;
@@ -124,7 +127,7 @@ function update(dt) {
   if (autoplaySmokeTest && playerActions.useItem && enabled) powerups.use(player);
   player.kart.update(dt, playerActions, track, enabled && race.state === 'RACING');
   for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt, racers, powerups); if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
-  resolveKartCollisions(racers); powerups.update(dt, racers); race.update(dt);
+  resolveKartCollisions(racers); powerups.update(dt, racers); race.update(dt); audio.update(game, playerActions, dt);
   track.setFinalLapVisual(previewFinish || player.lap >= LAPS - 1);
   retireFinishedCpuVisuals(dt, racers); racers.forEach(racer => { if (!racer.retired) racer.visual.update(dt); });
 }
@@ -137,7 +140,7 @@ function updateCamera(dt) {
 
 function render() {
   if (!game) return; const now = performance.now(); const delta = now - lastRender; lastRender = now; frameSamples.push(delta); if (frameSamples.length > 30) frameSamples.shift(); updateCamera(1/60);
-  const info = renderer.info; const avg = frameSamples.reduce((a,b)=>a+b,0) / frameSamples.length; ui.update(game.race, game.player, { fps: Math.round(1000 / avg), ms: avg.toFixed(1), calls: info.render.calls, triangles: info.render.triangles, geometries: info.memory.geometries, textures: info.memory.textures });
+  const info = renderer.info; const avg = frameSamples.reduce((a,b)=>a+b,0) / frameSamples.length; ui.update(game.race, game.player, { fps: Math.round(1000 / avg), ms: avg.toFixed(1), calls: info.render.calls, triangles: info.render.triangles, geometries: info.memory.geometries, textures: info.memory.textures }, audio.getDebug());
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.render(scene, camera);
 }
 

@@ -1,7 +1,12 @@
+import { AudioManager } from '../game/audio/AudioManager.js';
+
+const audio = new AudioManager();
+audio.playMusic('menu');
 const splash = document.querySelector('#splash');
 const menu = document.querySelector('#menu-screen');
 const panels = [...document.querySelectorAll('.panel')];
-const settings = { music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), quality: document.querySelector('#quality-choice') };
+const settings = { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), mute: document.querySelector('#audio-mute'), quality: document.querySelector('#quality-choice') };
+const playSelect = () => audio.playSfx('uiSelect', { gain: .34, cooldown: 70 });
 
 function revealMenu() {
   splash.classList.add('leaving');
@@ -17,29 +22,32 @@ function requestMobileFullscreen() {
 }
 
 function openPanel(panelId) {
+  playSelect();
   panels.forEach(panel => { panel.hidden = panel.id !== panelId; });
   document.querySelector(`#${panelId}`).querySelector('button, input, select')?.focus();
 }
 
-function closePanels() { panels.forEach(panel => { panel.hidden = true; }); document.querySelector('#open-racers').focus(); }
+function closePanels() { audio.playSfx('uiBack', { gain: .32, cooldown: 70 }); panels.forEach(panel => { panel.hidden = true; }); document.querySelector('#open-racers').focus(); }
 
 function persistSetting(key, value) { localStorage.setItem(`dlikarts.${key}`, value); }
 function loadSetting(key, input, fallback) { const value = localStorage.getItem(`dlikarts.${key}`) ?? fallback; input.value = value; syncOutput(input); }
 function syncOutput(input) { const output = document.querySelector(`output[for="${input.id}"]`); if (output) output.textContent = `${input.value}%`; }
 
-document.querySelector('#skip-intro').addEventListener('click', () => { requestMobileFullscreen(); revealMenu(); });
+document.querySelector('#skip-intro').addEventListener('click', async () => { await audio.unlock(); playSelect(); requestMobileFullscreen(); revealMenu(); });
 window.setTimeout(revealMenu, 2100);
-document.querySelector('#open-racers').addEventListener('click', () => { requestMobileFullscreen(); openPanel('racers-panel'); });
-document.querySelector('#open-howto').addEventListener('click', () => { requestMobileFullscreen(); openPanel('howto-panel'); });
-document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', () => { requestMobileFullscreen(); openPanel('settings-panel'); }));
+document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('racers-panel'); });
+document.querySelector('#open-howto').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('howto-panel'); });
+document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('settings-panel'); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
-document.querySelector('#launch-game').addEventListener('click', () => { location.href = '../game/'; });
-document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => {
+document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
+document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => { playSelect();
   document.querySelectorAll('.racer-card[data-racer]').forEach(item => { item.classList.toggle('selected', item === card); item.setAttribute('aria-pressed', String(item === card)); });
   document.querySelector('#selection-message').textContent = `${card.dataset.racer.toUpperCase()} IS READY TO RACE.`;
 }));
 document.addEventListener('keydown', event => { if (event.key === 'Escape') closePanels(); });
-settings.music.addEventListener('input', () => { syncOutput(settings.music); persistSetting('music', settings.music.value); });
-settings.sfx.addEventListener('input', () => { syncOutput(settings.sfx); persistSetting('sfx', settings.sfx.value); });
+settings.master.addEventListener('input', () => { syncOutput(settings.master); audio.setMasterVolume(Number(settings.master.value) / 100); playSelect(); });
+settings.music.addEventListener('input', () => { syncOutput(settings.music); audio.setMusicVolume(Number(settings.music.value) / 100); persistSetting('music', settings.music.value); });
+settings.sfx.addEventListener('input', () => { syncOutput(settings.sfx); audio.setSfxVolume(Number(settings.sfx.value) / 100); persistSetting('sfx', settings.sfx.value); });
+settings.mute.addEventListener('click', async () => { await audio.unlock(); audio.setMuted(); settings.mute.textContent = audio.settings.muted ? 'UNMUTE' : 'MUTE'; if (!audio.settings.muted) playSelect(); });
 settings.quality.addEventListener('change', () => persistSetting('quality', settings.quality.value));
-loadSetting('music', settings.music, 70); loadSetting('sfx', settings.sfx, 80); settings.quality.value = localStorage.getItem('dlikarts.quality') ?? 'auto';
+settings.master.value = Math.round(audio.settings.master * 100); settings.music.value = Math.round(audio.settings.music * 100); settings.sfx.value = Math.round(audio.settings.sfx * 100); syncOutput(settings.master); syncOutput(settings.music); syncOutput(settings.sfx); settings.mute.textContent = audio.settings.muted ? 'UNMUTE' : 'MUTE'; settings.quality.value = localStorage.getItem('dlikarts.quality') ?? 'auto';
