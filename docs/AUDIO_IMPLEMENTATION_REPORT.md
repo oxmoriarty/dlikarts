@@ -5,8 +5,8 @@
 Audio is centralized in `game/audio/AudioManager.js`. Gameplay systems do not
 create `Audio` objects. The manager observes `RaceSystem` state and player-kart
 state, while `PowerupSystem` publishes a compact pickup/use event queue for
-precise cues. Kart-to-kart collision handling reports only player-involved
-meaningful impacts to the manager.
+precise cues. Player kart-to-kart collision handling and track-edge
+corrections report only meaningful impacts to the manager.
 
 `AudioManager` owns music transitions, two dedicated loop voices (engine and
 drift), short-effect pools, cooldowns, local volume preferences, visibility
@@ -30,15 +30,17 @@ recorded as source information required from the user in `assets/audio/LICENSES.
 
 ## New sound effects and licensing
 
-Thirteen small OGG effects were selected from Kenney's CC0 Sci-Fi Sounds and
-Interface Sounds packs. Per-file original names, creator, URL, licence and
-modification status are in `assets/audio/LICENSES.md`. The additions total
-513,123 bytes (about 501 KiB). No lossy re-encoding was performed.
+The runtime maps fourteen context-appropriate effects: a traced CC0 racing
+engine loop; tyre-scrub, boost, collision and landing feedback; countdown,
+lap and finish cues; plus individual shield and projectile activations. Per-file
+original names, creator, URL, licence and modification status are in
+`assets/audio/LICENSES.md`. The complete `assets/audio` payload is 16.02 MiB,
+dominated by the four approved music tracks. No lossy re-encoding was performed.
 
 The intended previously approved `engine-loop.ogg` was absent at audit time.
-To keep the system runnable, a traced CC0 replacement (`engineCircular_000.ogg`)
-is currently installed under that runtime filename. It is safe to replace with
-the approved original later without a code change.
+It has been replaced with a traced CC0 racing-engine loop (`engine-loop.wav`)
+from domasx2, which is more appropriate for the kart. It is safe to replace
+with the approved original later without a code change.
 
 ## Gameplay mapping
 
@@ -47,10 +49,12 @@ the approved original later without a code change.
 - Drift: one loop starts only when `kart.drift` becomes true, responds to drift
   charge, and fades on exit.
 - Boost: a one-shot plays only when actual boost time increases.
-- Collision: player-involved impacts are intensity-scaled, rate-varied subtly,
-  and have a 150 ms cooldown.
+- Collision: player-involved kart impacts and meaningful road-edge impacts are
+  intensity-scaled, rate-varied subtly, and have a 150 ms cooldown.
 - Landing: only a meaningful airborne-to-grounded transition plays a cue.
 - Power-ups: collection and activation are separate PowerupSystem events.
+  Zipcap uses the boost cue, Halo Guard uses the force-field cue, and Rattle
+  Pod uses the forward-projectile cue rather than a generic activation sound.
 - Laps/final lap/finish: each cue is gated to the legitimate player race state;
   CPU finishes never play the player's finish signal.
 - UI: select/back sounds are bound to existing menu, panel, retry, quality and
@@ -70,21 +74,24 @@ logic.
 
 ## Concurrency and performance
 
-The engine and drift each have one dedicated loop. Short sounds use pools of
-three voices (two for collision) and effect-specific cooldowns, preventing
-wall-scrape or rapid-click stacking. CPU engine loops are deliberately omitted
-for the vertical slice so the player engine remains clear and browser audio
-work stays small.
+The engine and drift each have one dedicated loop. Loop playback never restarts
+while active, fades have cancellation tokens, and stopping music clears its
+desired state so a late keyboard unlock cannot restart menu music over a race.
+Short sounds use pools of three voices (two for collision) and effect-specific
+cooldowns, preventing wall-scrape or rapid-click stacking. CPU engine loops are
+deliberately omitted for the vertical slice so the player engine remains clear
+and browser audio work stays small.
 
 ## Validation
 
 - Node syntax checks passed for the audio manager, game integration, UI,
   power-ups and landing menu.
-- Existing logic suite: 8/8 passed.
+- Existing logic suite: 10/10 passed.
 - Desktop browser validation: game booted from `http://127.0.0.1:4173/game/`,
   Start Race entered countdown, the audio context reached `running`, race
   music state became active after GO, and browser console errors/warnings were
-  empty.
+  empty. The delayed keyboard-unlock path was also checked so it cannot restart
+  menu music during the race.
 - Mobile behavior is implemented through the same first-tap unlock and
   responsive settings controls. It requires real-device listening validation
   before release; no real phone/tablet test was performed in this pass.

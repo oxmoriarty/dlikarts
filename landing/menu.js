@@ -1,4 +1,4 @@
-import { AudioManager } from '../game/audio/AudioManager.js';
+import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-3';
 
 const audio = new AudioManager();
 audio.playMusic('menu');

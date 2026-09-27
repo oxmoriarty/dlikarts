@@ -13,7 +13,7 @@ import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=audio-events-1';
 import { UI } from './ui/UI.js?v=audio-ui-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
-import { AudioManager } from './audio/AudioManager.js';
+import { AudioManager } from './audio/AudioManager.js?v=audio-stability-3';
 
 const canvas = document.querySelector('#game');
 const ui = new UI();

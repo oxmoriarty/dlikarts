@@ -1,18 +1,22 @@
 # DliKarts audio provenance
 
-All newly added runtime effects below are sourced from Kenney packs released
-under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
-CC0 does not require attribution; this record is retained for traceability.
+All newly added runtime effects below are CC0 1.0 Universal assets from
+Kenney or the separately identified OpenGameArt creator. CC0 does not require
+attribution; this record is retained for traceability.
 
 ## Newly sourced effects
 
-### engine-loop.ogg
+### engine-loop.wav
 
-Original asset: `engineCircular_000.ogg`  
-Creator: Kenney  
-Source: https://opengameart.org/content/sci-fi-sounds  
-License: CC0 1.0 Universal  
-Attribution required: No  
+Original asset: `loop_3.wav`
+
+Creator: domasx2
+
+Source: https://opengameart.org/content/racing-car-engine-sound-loops
+
+License: CC0 1.0 Universal
+
+Attribution required: No
 Modifications: Renamed for the runtime; no audio conversion or editing.
 
 ### boost.ogg
@@ -33,13 +37,17 @@ License: CC0 1.0 Universal
 Attribution required: No  
 Modifications: Renamed for the runtime; no audio conversion or editing.
 
-### powerup-use.ogg
+### shield.ogg and projectile.ogg
 
-Original asset: `forceField_001.ogg`  
-Creator: Kenney  
-Source: https://opengameart.org/content/sci-fi-sounds  
-License: CC0 1.0 Universal  
-Attribution required: No  
+Original assets: `forceField_001.ogg` and `laserSmall_001.ogg` respectively
+
+Creator: Kenney
+
+Source: https://opengameart.org/content/sci-fi-sounds
+
+License: CC0 1.0 Universal
+
+Attribution required: No
 Modifications: Renamed for the runtime; no audio conversion or editing.
 
 ### drift.ogg
@@ -88,6 +96,6 @@ no provenance is inferred here.
 ## Engine-loop audit note
 
 The requested pre-existing `sfx/engine-loop.ogg` was not present in the
-repository at the time of the audio audit. The current runtime file with that
-name is the traced CC0 Kenney asset documented above. If the original approved
-engine loop is supplied later, it can replace this file without changing code.
+repository at the time of the audio audit. The current runtime engine is the
+traced CC0 racing-loop asset documented above. If the original approved engine
+loop is supplied later, it can replace `engine-loop.wav` without code changes.

@@ -279,6 +279,9 @@ export class SwitchbackYard {
   constrain(kart) {
     const q = this.query(kart.position, kart.progress);
     if (Math.abs(q.lateral) > this.width / 2 + .55) {
+      // A tiny, transient event consumed by AudioManager. It is deliberately
+      // separate from movement so collision sound cannot influence handling.
+      kart.wallImpact = Math.max(kart.wallImpact || 0, Math.abs(kart.speed));
       const sign = Math.sign(q.lateral); const edge = this.width / 2 + .45;
       kart.position.x = q.p.x + q.normal.x * sign * edge; kart.position.z = q.p.z + q.normal.z * sign * edge;
       kart.speed *= .52; kart.lateralSpeed *= -.18; kart.hitTimer = .16;

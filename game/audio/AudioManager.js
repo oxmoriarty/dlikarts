@@ -6,7 +6,7 @@ const MUSIC = {
 };
 
 const SFX = {
-  engine: new URL('../../assets/audio/sfx/engine-loop.ogg', import.meta.url).href,
+  engine: new URL('../../assets/audio/sfx/engine-loop.wav', import.meta.url).href,
   drift: new URL('../../assets/audio/sfx/drift.ogg', import.meta.url).href,
   boost: new URL('../../assets/audio/sfx/boost.ogg', import.meta.url).href,
   collision: new URL('../../assets/audio/sfx/collision.ogg', import.meta.url).href,
@@ -14,7 +14,8 @@ const SFX = {
   countdown: new URL('../../assets/audio/sfx/countdown.ogg', import.meta.url).href,
   go: new URL('../../assets/audio/sfx/go.ogg', import.meta.url).href,
   powerupPickup: new URL('../../assets/audio/sfx/powerup-pickup.ogg', import.meta.url).href,
-  powerupUse: new URL('../../assets/audio/sfx/powerup-use.ogg', import.meta.url).href,
+  shield: new URL('../../assets/audio/sfx/shield.ogg', import.meta.url).href,
+  projectile: new URL('../../assets/audio/sfx/projectile.ogg', import.meta.url).href,
   lapComplete: new URL('../../assets/audio/sfx/lap-complete.ogg', import.meta.url).href,
   raceFinish: new URL('../../assets/audio/sfx/race-finish.ogg', import.meta.url).href,
   uiSelect: new URL('../../assets/audio/sfx/ui-select.ogg', import.meta.url).href,
@@ -27,10 +28,14 @@ const approach = (current, target, speed, dt) => current + (target - current) * 
 
 function makeAudio(url, loop = false) {
   const audio = new Audio(url);
-  audio.preload = 'auto';
+  // Loading dozens of full sound buffers during boot can starve music decoding
+  // on mobile browsers. Metadata is enough until a sound is actually needed.
+  audio.preload = 'metadata';
   audio.loop = loop;
   audio.volume = 0;
   audio._gain = 1;
+  audio._fadeToken = 0;
+  audio._stopping = false;
   audio.addEventListener('error', () => { audio._failed = true; }, { once: true });
   return audio;
 }
@@ -100,14 +105,16 @@ export class AudioManager {
     if (!document.hidden && this.desiredMusic) this.playMusic(this.desiredMusic);
   }
 
-  playElement(audio) { if (!this.unlocked || audio._failed || document.hidden) return; audio.play().catch(() => {}); }
+  playElement(audio) { if (!this.unlocked || audio._failed || document.hidden || !audio.paused) return; audio.play().catch(() => {}); }
   fade(audio, target, seconds = .35, bus = 'music', stopAtEnd = false) {
+    const token = ++audio._fadeToken;
     const started = performance.now(); const initial = audio._gain;
     const tick = now => {
+      if (token !== audio._fadeToken) return;
       const t = clamp((now - started) / (seconds * 1000));
       audio._gain = initial + (target - initial) * t; audio.volume = this.effective(bus, audio._gain);
       if (t < 1) requestAnimationFrame(tick);
-      else if (stopAtEnd && target <= 0.001) { audio.pause(); audio.currentTime = 0; }
+      else if (stopAtEnd && target <= 0.001) { audio.pause(); audio.currentTime = 0; audio._stopping = false; }
     };
     requestAnimationFrame(tick);
   }
@@ -125,7 +132,16 @@ export class AudioManager {
     if (previous && previous !== next) this.fade(previous, 0, seconds, 'music', true);
     this.currentMusic = name;
   }
-  stopMusic(seconds = .3) { if (!this.currentMusic) return; const audio = this.music[this.currentMusic]; this.fade(audio, 0, seconds, 'music', true); this.currentMusic = null; }
+  stopMusic(seconds = .3, clearDesired = true) {
+    // A late first key press can unlock browser audio. Clear the requested
+    // menu cue as well as the active element so that unlock cannot resurrect
+    // menu music on top of the countdown/race music.
+    if (clearDesired) this.desiredMusic = null;
+    if (!this.currentMusic) return;
+    const audio = this.music[this.currentMusic];
+    this.fade(audio, 0, seconds, 'music', true);
+    this.currentMusic = null;
+  }
 
   playSfx(name, { gain = 1, rate = 1, cooldown = 0 } = {}) {
     if (!this.unlocked || !this.pools.has(name)) return false;
@@ -139,15 +155,24 @@ export class AudioManager {
   }
   setLoop(name, active, gain = 1) {
     const audio = this.loops[name]; if (!audio || !this.unlocked) return;
-    if (active) { audio._gain = clamp(gain); audio.volume = this.effective('sfx', audio._gain); this.playElement(audio); }
-    else if (!audio.paused) this.fade(audio, 0, .12, 'sfx', true);
+    if (active) {
+      // Updating pitch/gain every simulation tick must not restart the media
+      // element or leave old fade callbacks fighting the current value.
+      audio._fadeToken += 1; audio._stopping = false; audio._gain = clamp(gain); audio.volume = this.effective('sfx', audio._gain); this.playElement(audio);
+    } else if (!audio.paused && !audio._stopping) { audio._stopping = true; this.fade(audio, 0, .12, 'sfx', true); }
   }
   reportCollision(strength) { this.pendingCollision = Math.max(this.pendingCollision, strength); }
   consumeGameplayEvents(powerups, player) {
     for (const event of powerups.consumeEvents?.() || []) {
       if (event.racer !== player) continue;
       if (event.type === 'pickup') this.playSfx('powerupPickup', { gain: .72, cooldown: 90 });
-      if (event.type === 'use') this.playSfx('powerupUse', { gain: event.powerup === 'RATTLE POD' ? .82 : .66, rate: event.powerup === 'ZIPCAP' ? 1.12 : 1, cooldown: 110 });
+      if (event.type === 'use') {
+        // Each item has a purpose-specific cue: Zipcap is propulsion, Halo
+        // Guard is an energy shield, and Rattle Pod is a forward projectile.
+        if (event.powerup === 'ZIPCAP') this.playSfx('boost', { gain: .64, rate: 1.06, cooldown: 110 });
+        else if (event.powerup === 'HALO GUARD') this.playSfx('shield', { gain: .66, cooldown: 110 });
+        else this.playSfx('projectile', { gain: .7, cooldown: 110 });
+      }
     }
   }
   updateEngine(kart, input, dt, active) {
@@ -186,6 +211,9 @@ export class AudioManager {
     this.lastBoost = kart.boostTimer;
     if (this.lastAirborne && !kart.airborne && this.lastVerticalSpeed < -3) this.playSfx('landing', { gain: clamp(Math.abs(this.lastVerticalSpeed) / 12, .35, .9), cooldown: 180 });
     this.lastAirborne = kart.airborne; this.lastVerticalSpeed = kart.verticalSpeed;
+    // Track-edge impacts are emitted by the arcade controller only when it
+    // actually corrects a kart back inside the playable road bounds.
+    if (kart.wallImpact > 0) { this.reportCollision(kart.wallImpact); kart.wallImpact = 0; }
     if (this.pendingCollision > 3) this.playSfx('collision', { gain: clamp(this.pendingCollision / 17, .3, .9), rate: .94 + Math.random() * .1, cooldown: 150 });
     this.pendingCollision = 0;
     this.updateEngine(kart, input, dt, race.state === 'RACING');

@@ -11,7 +11,7 @@ export class ArcadeKart {
     this.wheelGroundOffset = Number.isFinite(tuning.wheelGroundOffset) ? tuning.wheelGroundOffset : 0;
     this.yaw = pose.yaw; this.previousYaw = pose.yaw; this.progress = pose.progress; this.speed = 0; this.lateralSpeed = 0; this.verticalSpeed = 0;
     this.grounded = true; this.drift = false; this.driftDirection = 0; this.driftCharge = 0; this.boostTimer = 0; this.boostStrength = 0;
-    this.airborne = false; this.jumpUsed = false; this.offRoad = false; this.hitTimer = 0; this.guardTimer = 0; this.item = null; this.finished = false;
+    this.airborne = false; this.jumpUsed = false; this.offRoad = false; this.hitTimer = 0; this.wallImpact = 0; this.guardTimer = 0; this.item = null; this.finished = false;
     this.lean = 0; this.pitch = 0; this.recoveryTimer = 0; this.lastSafe = pose.position.clone(); this.lastSafeYaw = pose.yaw;
   }
   forward(out = new THREE.Vector3()) { return out.set(Math.sin(this.yaw), 0, Math.cos(this.yaw)); }
