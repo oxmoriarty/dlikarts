@@ -97,8 +97,10 @@ function setRacePaused(paused) {
 document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
 document.querySelector('#pause-race').addEventListener('click', async () => { await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
 document.querySelector('#resume-race').addEventListener('click', async () => { await audio.unlock(); setRacePaused(false); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); });
+// Direct routes paint their intended menu view immediately, so neither action
+// exposes the landing/loading splash between race screens.
 document.querySelector('#open-race-settings').addEventListener('click', () => { if (!game) return; setRacePaused(true); location.href = '../landing/?panel=settings&return=game'; });
-document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/'; });
+document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/?view=menu'; });
 
 function resolveKartCollisions(racers) {
   for (let i = 0; i < racers.length; i += 1) for (let j = i + 1; j < racers.length; j += 1) {

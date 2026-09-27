@@ -7,6 +7,7 @@ const menu = document.querySelector('#menu-screen');
 const panels = [...document.querySelectorAll('.panel')];
 const settings = { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), mute: document.querySelector('#audio-mute'), quality: document.querySelector('#quality-choice'), controls: document.querySelector('#control-choice') };
 const requestedPanel = new URLSearchParams(location.search).get('panel');
+const requestedView = new URLSearchParams(location.search).get('view');
 const returnToRace = new URLSearchParams(location.search).get('return') === 'game';
 const playSelect = () => audio.playSfx('uiSelect', { gain: .34, cooldown: 70 });
 
@@ -43,6 +44,8 @@ document.querySelector('#skip-intro').addEventListener('click', async () => { aw
 if (requestedPanel === 'settings') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
   requestAnimationFrame(() => openPanel('settings-panel'));
+} else if (requestedView === 'menu') {
+  splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
 } else window.setTimeout(revealMenu, 2100);
 document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('racers-panel'); });
 document.querySelector('#open-howto').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('howto-panel'); });

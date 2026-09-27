@@ -8,9 +8,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#07101b" />
     <title>DliKarts — Race. Play. Repeat.</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=direct-routes-1" />
     <link rel="stylesheet" href="./responsive.css" />
     <link rel="stylesheet" href="./mobile.css" />
+    <script>
+      // Run before body content paints, preventing a landing-screen flash when
+      // the player intentionally goes straight to settings or the menu.
+      const route = new URLSearchParams(location.search);
+      if (route.get('panel') === 'settings') document.documentElement.classList.add('direct-settings');
+      if (route.get('view') === 'menu') document.documentElement.classList.add('direct-menu');
+    </script>
   </head>
   <body>
     <main class="garage-shell">
@@ -79,6 +86,6 @@
         <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO UNLOCKS AFTER YOUR FIRST TAP OR CLICK.</p>
       </section>
     </main>
-    <script type="module" src="./menu.js?v=touch-control-modes-1"></script>
+    <script type="module" src="./menu.js?v=direct-routes-1"></script>
   </body>
 </html>

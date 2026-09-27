@@ -30,7 +30,9 @@ html,body,#game{height:100%;height:100dvh;overscroll-behavior:none}body,body *{-
   body #touch-controls .touch-right .touch-icon{position:absolute;width:86px!important;height:86px!important;min-width:86px;pointer-events:auto}
   body #touch-controls .touch-right .accelerate{left:0;bottom:0}
   body #touch-controls .touch-right .brake{right:0;bottom:0}
-  body #touch-controls .touch-right .drift-control{right:64px;bottom:102px}
+  /* Keep drift clearly above and just left of brake: a reachable diagonal,
+     without crowding the accelerator pedal below. */
+  body #touch-controls .touch-right .drift-control{right:36px;bottom:102px}
   body #touch-controls .touch-right .recover{left:0;right:auto;top:auto;bottom:116px;width:50px!important;height:50px!important;min-width:50px}
   body #touch-controls #touch-item{position:fixed;right:max(18px,env(safe-area-inset-right));top:14%;width:94px!important;height:94px!important;min-width:94px;pointer-events:auto;filter:drop-shadow(0 2px 7px rgba(0,0,0,.7))}
   body #touch-controls #touch-item svg{width:70px;height:70px;stroke-width:1.45}
