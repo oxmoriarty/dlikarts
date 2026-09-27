@@ -24,6 +24,9 @@ const SFX = {
 };
 
 const STORAGE_KEY = 'dlikarts.audio.v1';
+// Kept as a single switch while the sound pass is being tuned. This preserves
+// the vehicle-audio implementation without creating any engine playback.
+const ENGINE_AUDIO_ENABLED = false;
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const approach = (current, target, speed, dt) => current + (target - current) * (1 - Math.exp(-speed * dt));
 
@@ -240,6 +243,11 @@ export class AudioManager {
     if (racer === player) { this.engineRate = voice.rate; this.engineGain = voice.gain; }
   }
   updateEngines(game, playerInput, dt) {
+    if (!ENGINE_AUDIO_ENABLED) {
+      this.engineVoices.forEach(voice => { this.setAudioLoop(voice.engine, false); this.setAudioLoop(voice.reverseAlert, false); });
+      this.engineGain = 0;
+      return;
+    }
     const raceActive = game.race.state === 'RACING' || game.race.state === 'PLAYER_FINISHED';
     game.racers.forEach(racer => this.updateEngineVoice(racer, game.player, racer === game.player ? playerInput : racer.lastActions, dt, raceActive));
   }

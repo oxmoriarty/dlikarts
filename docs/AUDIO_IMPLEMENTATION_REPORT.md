@@ -44,11 +44,9 @@ with the approved original later without a code change.
 
 ## Gameplay mapping
 
-- Engine: one continuous loop per moving kart, with player priority and
-  distance-attenuated CPU voices. Speed and throttle smoothly raise pitch/gain;
-  coasting lowers them without restarting playback, and a kart's engine stops
-  only after that kart has stopped or left the active race. Reverse retains the
-  engine at a lower pitch and adds a restrained CC0 reverse alert.
+- Engine: temporarily disabled at the audio-manager feature switch while the
+  SFX mix is being reworked. The continuous player/CPU engine and reverse
+  implementation remains isolated in the manager for later re-enablement.
 - Drift: one loop starts only when `kart.drift` becomes true, responds to drift
   charge, and fades on exit.
 - Boost: a one-shot plays only when actual boost time increases.
@@ -77,13 +75,11 @@ logic.
 
 ## Concurrency and performance
 
-The engine and drift each have one dedicated loop. Loop playback never restarts
-while active, fades have cancellation tokens, and stopping music clears its
+Drift has one dedicated loop. Engine voice creation is currently disabled.
+Loop playback never restarts while active, fades have cancellation tokens, and stopping music clears its
 desired state so a late keyboard unlock cannot restart menu music over a race.
 Short sounds use pools of three voices (two for collision) and effect-specific
-cooldowns, preventing wall-scrape or rapid-click stacking. Each active CPU has
-one shared-source engine voice, volume-reduced by distance from the player; no
-engine sound is allocated for finished/retired racers.
+cooldowns, preventing wall-scrape or rapid-click stacking.
 
 ## Validation
 

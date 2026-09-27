@@ -53,7 +53,7 @@ test('AudioManager maps each implemented power-up to a purpose-specific effect',
   }
 });
 
-test('AudioManager keeps every moving kart engine continuous and distinguishes reverse', async () => {
+test('AudioManager leaves engine and reverse voices disabled while engine audio is off', async () => {
   const store = new Map();
   globalThis.localStorage = { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) };
   globalThis.document = { hidden: false, addEventListener() {} };
@@ -68,15 +68,6 @@ test('AudioManager keeps every moving kart engine continuous and distinguishes r
   const cpu = { id: 'cpu-1', lap: 0, kart: cpuKart, lastActions: { throttle: 1 } };
   const game = { race: { state: 'RACING', displayCountdown: 'GO!' }, player, racers: [player, cpu], powerups: { consumeEvents: () => [] } };
   audio.update(game, player.lastActions, 1 / 60);
-  assert.equal(audio.engineVoices.get('guatam').engine.paused, false);
-  assert.equal(audio.engineVoices.get('cpu-1').engine.paused, false);
-  const acceleratingRate = audio.engineVoices.get('guatam').engine.playbackRate;
-  playerKart.speed = -3; player.lastActions = { brake: 1 };
-  audio.update(game, player.lastActions, 1 / 60);
-  assert.equal(audio.engineVoices.get('guatam').reverseAlert.paused, false);
-  assert.ok(audio.engineVoices.get('guatam').engine.playbackRate < acceleratingRate);
-  playerKart.speed = 0; cpuKart.speed = 0;
-  audio.update(game, {}, 1 / 60); await Promise.resolve();
-  assert.equal(audio.engineVoices.get('guatam').engine.paused, true);
-  assert.equal(audio.engineVoices.get('cpu-1').engine.paused, true);
+  assert.equal(audio.engineVoices.size, 0);
+  assert.equal(audio.engineGain, 0);
 });
