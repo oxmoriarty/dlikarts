@@ -34,7 +34,7 @@ The runtime maps fourteen context-appropriate effects: a traced CC0 racing
 engine loop; tyre-scrub, boost, collision and landing feedback; countdown,
 lap and finish cues; plus individual shield and projectile activations. Per-file
 original names, creator, URL, licence and modification status are in
-`assets/audio/LICENSES.md`. The complete `assets/audio` payload is 16.02 MiB,
+`assets/audio/LICENSES.md`. The complete `assets/audio` payload is 16.27 MiB,
 dominated by the four approved music tracks. No lossy re-encoding was performed.
 
 The intended previously approved `engine-loop.ogg` was absent at audit time.
@@ -44,8 +44,11 @@ with the approved original later without a code change.
 
 ## Gameplay mapping
 
-- Engine: player-only loop with smoothed speed/throttle pitch (0.72–1.40x) and
-  gain. It is reduced while airborne and ends when racing ends.
+- Engine: one continuous loop per moving kart, with player priority and
+  distance-attenuated CPU voices. Speed and throttle smoothly raise pitch/gain;
+  coasting lowers them without restarting playback, and a kart's engine stops
+  only after that kart has stopped or left the active race. Reverse retains the
+  engine at a lower pitch and adds a restrained CC0 reverse alert.
 - Drift: one loop starts only when `kart.drift` becomes true, responds to drift
   charge, and fades on exit.
 - Boost: a one-shot plays only when actual boost time increases.
@@ -78,15 +81,15 @@ The engine and drift each have one dedicated loop. Loop playback never restarts
 while active, fades have cancellation tokens, and stopping music clears its
 desired state so a late keyboard unlock cannot restart menu music over a race.
 Short sounds use pools of three voices (two for collision) and effect-specific
-cooldowns, preventing wall-scrape or rapid-click stacking. CPU engine loops are
-deliberately omitted for the vertical slice so the player engine remains clear
-and browser audio work stays small.
+cooldowns, preventing wall-scrape or rapid-click stacking. Each active CPU has
+one shared-source engine voice, volume-reduced by distance from the player; no
+engine sound is allocated for finished/retired racers.
 
 ## Validation
 
 - Node syntax checks passed for the audio manager, game integration, UI,
   power-ups and landing menu.
-- Existing logic suite: 10/10 passed.
+- Existing logic suite: 11/11 passed.
 - Desktop browser validation: game booted from `http://127.0.0.1:4173/game/`,
   Start Race entered countdown, the audio context reached `running`, race
   music state became active after GO, and browser console errors/warnings were

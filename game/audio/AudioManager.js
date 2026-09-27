@@ -7,6 +7,7 @@ const MUSIC = {
 
 const SFX = {
   engine: new URL('../../assets/audio/sfx/engine-loop.wav', import.meta.url).href,
+  reverseAlert: new URL('../../assets/audio/sfx/reverse-alert.wav', import.meta.url).href,
   drift: new URL('../../assets/audio/sfx/drift.ogg', import.meta.url).href,
   boost: new URL('../../assets/audio/sfx/boost.ogg', import.meta.url).href,
   collision: new URL('../../assets/audio/sfx/collision.ogg', import.meta.url).href,
@@ -36,6 +37,7 @@ function makeAudio(url, loop = false) {
   audio._gain = 1;
   audio._fadeToken = 0;
   audio._stopping = false;
+  audio._wanted = false;
   audio.addEventListener('error', () => { audio._failed = true; }, { once: true });
   return audio;
 }
@@ -58,7 +60,10 @@ export class AudioManager {
     this.desiredMusic = null;
     this.currentMusic = null;
     this.music = Object.fromEntries(Object.entries(MUSIC).map(([name, url]) => [name, makeAudio(url, true)]));
-    this.loops = { engine: makeAudio(SFX.engine, true), drift: makeAudio(SFX.drift, true) };
+    this.loops = { drift: makeAudio(SFX.drift, true) };
+    // Each active kart owns an engine loop. CPU voices are spatially
+    // approximated with distance gain rather than expensive WebAudio panners.
+    this.engineVoices = new Map();
     this.pools = new Map();
     this.cooldowns = new Map();
     this.activeFades = new Set();
@@ -76,7 +81,8 @@ export class AudioManager {
     this.driftGain = 0;
     this.pendingCollision = 0;
     this.pausedForVisibility = false;
-    Object.keys(SFX).filter(name => !['engine', 'drift'].includes(name)).forEach(name => this.createPool(name, name === 'collision' ? 2 : 3));
+    this.gameplayPaused = false;
+    Object.keys(SFX).filter(name => !['engine', 'reverseAlert', 'drift'].includes(name)).forEach(name => this.createPool(name, name === 'collision' ? 2 : 3));
     document.addEventListener('visibilitychange', () => this.handleVisibility());
     document.addEventListener('pointerdown', () => this.unlock(), { once: true, passive: true });
     document.addEventListener('keydown', () => this.unlock(), { once: true });
@@ -88,12 +94,29 @@ export class AudioManager {
   refreshVolumes() {
     Object.values(this.music).forEach(audio => { audio.volume = this.effective('music', audio._gain); });
     Object.values(this.loops).forEach(audio => { audio.volume = this.effective('sfx', audio._gain); });
+    this.engineVoices.forEach(voice => {
+      voice.engine.volume = this.effective('sfx', voice.engine._gain);
+      voice.reverseAlert.volume = this.effective('sfx', voice.reverseAlert._gain);
+    });
     this.pools.forEach(pool => pool.forEach(audio => { audio.volume = this.effective('sfx', audio._gain); }));
   }
   setMasterVolume(value) { this.settings.master = clamp(Number(value)); this.persist(); this.refreshVolumes(); }
   setMusicVolume(value) { this.settings.music = clamp(Number(value)); this.persist(); this.refreshVolumes(); }
   setSfxVolume(value) { this.settings.sfx = clamp(Number(value)); this.persist(); this.refreshVolumes(); }
   setMuted(muted = !this.settings.muted) { this.settings.muted = Boolean(muted); this.persist(); this.refreshVolumes(); }
+  setGameplayPaused(paused) {
+    this.gameplayPaused = Boolean(paused);
+    if (this.gameplayPaused) {
+      Object.values(this.music).forEach(audio => audio.pause());
+      Object.values(this.loops).forEach(audio => audio.pause());
+      this.engineVoices.forEach(voice => { voice.engine.pause(); voice.reverseAlert.pause(); });
+      return;
+    }
+    if (!this.unlocked || document.hidden) return;
+    if (this.currentMusic) this.playElement(this.music[this.currentMusic]);
+    Object.values(this.loops).forEach(audio => { if (audio._wanted) this.playElement(audio); });
+    this.engineVoices.forEach(voice => { if (voice.engine._wanted) this.playElement(voice.engine); if (voice.reverseAlert._wanted) this.playElement(voice.reverseAlert); });
+  }
 
   async unlock() {
     if (!this.context && (window.AudioContext || window.webkitAudioContext)) {
@@ -153,14 +176,16 @@ export class AudioManager {
     audio.pause(); audio.currentTime = 0; audio.playbackRate = clamp(rate, .72, 1.38); audio._gain = clamp(gain); audio.volume = this.effective('sfx', audio._gain);
     this.playElement(audio); return true;
   }
-  setLoop(name, active, gain = 1) {
-    const audio = this.loops[name]; if (!audio || !this.unlocked) return;
+  setAudioLoop(audio, active, gain = 1) {
+    if (!audio || !this.unlocked) return;
     if (active) {
       // Updating pitch/gain every simulation tick must not restart the media
       // element or leave old fade callbacks fighting the current value.
-      audio._fadeToken += 1; audio._stopping = false; audio._gain = clamp(gain); audio.volume = this.effective('sfx', audio._gain); this.playElement(audio);
+      audio._fadeToken += 1; audio._stopping = false; audio._wanted = true; audio._gain = clamp(gain); audio.volume = this.effective('sfx', audio._gain); this.playElement(audio);
     } else if (!audio.paused && !audio._stopping) { audio._stopping = true; this.fade(audio, 0, .12, 'sfx', true); }
+    if (!active) audio._wanted = false;
   }
+  setLoop(name, active, gain = 1) { this.setAudioLoop(this.loops[name], active, gain); }
   reportCollision(strength) { this.pendingCollision = Math.max(this.pendingCollision, strength); }
   consumeGameplayEvents(powerups, player) {
     for (const event of powerups.consumeEvents?.() || []) {
@@ -175,24 +200,58 @@ export class AudioManager {
       }
     }
   }
-  updateEngine(kart, input, dt, active) {
-    if (!active) { this.engineGain = approach(this.engineGain, 0, 10, dt); this.setLoop('engine', false); return; }
+  getEngineVoice(racer) {
+    let voice = this.engineVoices.get(racer.id);
+    if (!voice) {
+      voice = { engine: makeAudio(SFX.engine, true), reverseAlert: makeAudio(SFX.reverseAlert, true), rate: .72, gain: 0, reverseGain: 0 };
+      this.engineVoices.set(racer.id, voice);
+    }
+    return voice;
+  }
+  updateEngineVoice(racer, player, input, dt, raceActive) {
+    const voice = this.getEngineVoice(racer); const { kart } = racer;
+    const moving = Math.abs(kart.speed) > .28 && !kart.finished && !racer.retired;
+    if (!raceActive || !moving) {
+      this.setAudioLoop(voice.engine, false); this.setAudioLoop(voice.reverseAlert, false);
+      if (racer === player) { this.engineGain = 0; this.engineRate = .72; }
+      return;
+    }
     const speed = clamp(Math.abs(kart.speed) / Math.max(1, kart.tuning.maxSpeed));
     const throttle = clamp(Math.max(input?.throttle || 0, kart.boostTimer > 0 ? .75 : 0));
-    const targetRate = .72 + speed * .56 + throttle * .12;
-    const targetGain = (.15 + speed * .18 + throttle * .16) * (kart.airborne ? .82 : 1);
-    this.engineRate = approach(this.engineRate, targetRate, 7, dt); this.engineGain = approach(this.engineGain, targetGain, 8, dt);
-    const engine = this.loops.engine; engine.playbackRate = clamp(this.engineRate, .72, 1.4); this.setLoop('engine', true, this.engineGain);
+    const reversing = kart.speed < -.28;
+    // The same motor continues while coasting or reversing. Acceleration
+    // raises its pitch and gain; deceleration smoothly drops them instead of
+    // stopping/restarting the sound between input changes.
+    const targetRate = reversing ? .62 + speed * .26 : .70 + speed * .58 + throttle * .14;
+    const playerGain = (reversing ? .18 + speed * .18 : .16 + speed * .24 + throttle * .18) * (kart.airborne ? .82 : 1);
+    let distanceGain = 1;
+    if (racer !== player) {
+      const distance = kart.position.distanceTo(player.kart.position);
+      distanceGain = .09 + .48 * Math.pow(clamp(1 - distance / 34), 1.35);
+    }
+    voice.rate = approach(voice.rate, targetRate, 7, dt);
+    voice.gain = approach(voice.gain, playerGain * distanceGain, 8, dt);
+    voice.engine.playbackRate = clamp(voice.rate, .58, 1.42);
+    this.setAudioLoop(voice.engine, true, voice.gain);
+    // A restrained vehicle reverse alert makes negative motion distinct while
+    // the lower-pitched engine preserves continuous motor feedback.
+    voice.reverseGain = approach(voice.reverseGain, reversing ? .18 * distanceGain : 0, 9, dt);
+    this.setAudioLoop(voice.reverseAlert, reversing, voice.reverseGain);
+    if (racer === player) { this.engineRate = voice.rate; this.engineGain = voice.gain; }
+  }
+  updateEngines(game, playerInput, dt) {
+    const raceActive = game.race.state === 'RACING' || game.race.state === 'PLAYER_FINISHED';
+    game.racers.forEach(racer => this.updateEngineVoice(racer, game.player, racer === game.player ? playerInput : racer.lastActions, dt, raceActive));
   }
   update(game, input, dt) {
-    if (!game) return;
+    if (!game || this.gameplayPaused) return;
     const { race, player, powerups } = game; const kart = player.kart;
     this.consumeGameplayEvents(powerups, player);
     if (this.lastRaceState !== race.state) {
       if (race.state === 'COUNTDOWN') this.stopMusic(.18);
       if (race.state === 'RACING') { this.playSfx('go', { gain: .9, cooldown: 300 }); this.playMusic('race', .42); }
-      if (race.state === 'PLAYER_FINISHED' && !this.finishTriggered) { this.finishTriggered = true; this.playSfx('raceFinish', { gain: .92 }); this.setLoop('engine', false); this.setLoop('drift', false); }
-      if (race.state === 'RESULTS') { this.setLoop('engine', false); this.setLoop('drift', false); this.playMusic('results', .6); }
+      if (race.state === 'PLAYER_FINISHED' && !this.finishTriggered) { this.finishTriggered = true; this.playSfx('raceFinish', { gain: .92 }); this.setLoop('drift', false); }
+      if (race.state === 'RESULTS') { this.engineVoices.forEach(voice => { this.setAudioLoop(voice.engine, false); this.setAudioLoop(voice.reverseAlert, false); }); this.setLoop('drift', false); this.playMusic('results', .6); }
       this.lastRaceState = race.state;
     }
     const countdown = race.displayCountdown;
@@ -216,16 +275,18 @@ export class AudioManager {
     if (kart.wallImpact > 0) { this.reportCollision(kart.wallImpact); kart.wallImpact = 0; }
     if (this.pendingCollision > 3) this.playSfx('collision', { gain: clamp(this.pendingCollision / 17, .3, .9), rate: .94 + Math.random() * .1, cooldown: 150 });
     this.pendingCollision = 0;
-    this.updateEngine(kart, input, dt, race.state === 'RACING');
+    this.updateEngines(game, input, dt);
   }
   handleVisibility() {
     if (document.hidden) {
       this.pausedForVisibility = true;
       Object.values(this.music).forEach(audio => audio.pause()); Object.values(this.loops).forEach(audio => audio.pause());
+      this.engineVoices.forEach(voice => { voice.engine.pause(); voice.reverseAlert.pause(); });
     } else if (this.pausedForVisibility) {
       this.pausedForVisibility = false;
       if (this.unlocked && this.currentMusic) this.playElement(this.music[this.currentMusic]);
+      this.engineVoices.forEach(voice => { if (voice.engine._wanted) this.playElement(voice.engine); if (voice.reverseAlert._wanted) this.playElement(voice.reverseAlert); });
     }
   }
-  getDebug() { return { music: this.currentMusic || 'silent', context: this.context?.state || 'not-created', master: Math.round(this.settings.master * 100), musicVolume: Math.round(this.settings.music * 100), sfx: Math.round(this.settings.sfx * 100), engineRate: this.engineRate.toFixed(2), engineGain: this.engineGain.toFixed(2), drift: !this.loops.drift.paused, voices: [...this.pools.values()].reduce((sum, pool) => sum + pool.filter(audio => !audio.paused).length, 0) }; }
+  getDebug() { return { music: this.currentMusic || 'silent', context: this.context?.state || 'not-created', master: Math.round(this.settings.master * 100), musicVolume: Math.round(this.settings.music * 100), sfx: Math.round(this.settings.sfx * 100), engineRate: this.engineRate.toFixed(2), engineGain: this.engineGain.toFixed(2), engines: [...this.engineVoices.values()].filter(voice => !voice.engine.paused).length, drift: !this.loops.drift.paused, voices: [...this.pools.values()].reduce((sum, pool) => sum + pool.filter(audio => !audio.paused).length, 0) }; }
 }

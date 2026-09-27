@@ -26,7 +26,8 @@ test('AudioManager follows race music states and persists bus preferences', asyn
   assert.equal(audio.currentMusic, null);
   audio.playMusic('menu');
   const kart = { speed: 0, tuning: { maxSpeed: 20 }, drift: false, driftCharge: 0, boostTimer: 0, airborne: false, verticalSpeed: 0 };
-  const game = { race: { state: 'RACING', displayCountdown: 'GO!' }, player: { lap: 0, kart }, powerups: { consumeEvents: () => [] } };
+  const player = { id: 'guatam', lap: 0, kart };
+  const game = { race: { state: 'RACING', displayCountdown: 'GO!' }, player, racers: [player], powerups: { consumeEvents: () => [] } };
   audio.update(game, { throttle: 1 }, 1 / 60); assert.equal(audio.currentMusic, 'race');
   game.player.lap = 2; audio.update(game, { throttle: 1 }, 1 / 60); assert.equal(audio.currentMusic, 'finalLap');
   game.race.state = 'RESULTS'; audio.update(game, { throttle: 0 }, 1 / 60); assert.equal(audio.currentMusic, 'results');
@@ -43,11 +44,39 @@ test('AudioManager maps each implemented power-up to a purpose-specific effect',
   const { AudioManager } = await import('../audio/AudioManager.js');
   const audio = new AudioManager(); await audio.unlock();
   const kart = { speed: 0, tuning: { maxSpeed: 20 }, drift: false, driftCharge: 0, boostTimer: 0, airborne: false, verticalSpeed: 0, wallImpact: 0 };
-  const player = { lap: 0, kart };
+  const player = { id: 'guatam', lap: 0, kart };
   for (const [powerup, effect] of [['ZIPCAP', 'boost'], ['HALO GUARD', 'shield'], ['RATTLE POD', 'projectile']]) {
-    const game = { race: { state: 'COUNTDOWN', displayCountdown: 3 }, player, powerups: { consumeEvents: () => [{ racer: player, type: 'use', powerup }] } };
+    const game = { race: { state: 'COUNTDOWN', displayCountdown: 3 }, player, racers: [player], powerups: { consumeEvents: () => [{ racer: player, type: 'use', powerup }] } };
     audio.update(game, {}, 1 / 60);
     assert.ok(audio.pools.get(effect).some(item => !item.paused), `${powerup} should play ${effect}`);
     audio.pools.get(effect).forEach(item => item.pause());
   }
+});
+
+test('AudioManager keeps every moving kart engine continuous and distinguishes reverse', async () => {
+  const store = new Map();
+  globalThis.localStorage = { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) };
+  globalThis.document = { hidden: false, addEventListener() {} };
+  globalThis.window = { AudioContext: class { constructor() { this.state = 'running'; } resume() { return Promise.resolve(); } } };
+  globalThis.Audio = FakeAudio;
+  globalThis.requestAnimationFrame = callback => { queueMicrotask(() => callback(performance.now() + 1000)); return 0; };
+  const { AudioManager } = await import('../audio/AudioManager.js');
+  const audio = new AudioManager(); await audio.unlock();
+  const playerKart = { speed: 10, tuning: { maxSpeed: 20 }, drift: false, driftCharge: 0, boostTimer: 0, airborne: false, verticalSpeed: 0, position: { distanceTo: () => 0 } };
+  const cpuKart = { speed: 9, tuning: { maxSpeed: 20 }, drift: false, driftCharge: 0, boostTimer: 0, airborne: false, verticalSpeed: 0, position: { distanceTo: () => 8 } };
+  const player = { id: 'guatam', lap: 0, kart: playerKart, lastActions: { throttle: 1 } };
+  const cpu = { id: 'cpu-1', lap: 0, kart: cpuKart, lastActions: { throttle: 1 } };
+  const game = { race: { state: 'RACING', displayCountdown: 'GO!' }, player, racers: [player, cpu], powerups: { consumeEvents: () => [] } };
+  audio.update(game, player.lastActions, 1 / 60);
+  assert.equal(audio.engineVoices.get('guatam').engine.paused, false);
+  assert.equal(audio.engineVoices.get('cpu-1').engine.paused, false);
+  const acceleratingRate = audio.engineVoices.get('guatam').engine.playbackRate;
+  playerKart.speed = -3; player.lastActions = { brake: 1 };
+  audio.update(game, player.lastActions, 1 / 60);
+  assert.equal(audio.engineVoices.get('guatam').reverseAlert.paused, false);
+  assert.ok(audio.engineVoices.get('guatam').engine.playbackRate < acceleratingRate);
+  playerKart.speed = 0; cpuKart.speed = 0;
+  audio.update(game, {}, 1 / 60); await Promise.resolve();
+  assert.equal(audio.engineVoices.get('guatam').engine.paused, true);
+  assert.equal(audio.engineVoices.get('cpu-1').engine.paused, true);
 });

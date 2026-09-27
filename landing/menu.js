@@ -1,4 +1,4 @@
-import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-3';
+import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-4';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
@@ -6,6 +6,8 @@ const splash = document.querySelector('#splash');
 const menu = document.querySelector('#menu-screen');
 const panels = [...document.querySelectorAll('.panel')];
 const settings = { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), mute: document.querySelector('#audio-mute'), quality: document.querySelector('#quality-choice') };
+const requestedPanel = new URLSearchParams(location.search).get('panel');
+const returnToRace = new URLSearchParams(location.search).get('return') === 'game';
 const playSelect = () => audio.playSfx('uiSelect', { gain: .34, cooldown: 70 });
 
 function revealMenu() {
@@ -27,14 +29,21 @@ function openPanel(panelId) {
   document.querySelector(`#${panelId}`).querySelector('button, input, select')?.focus();
 }
 
-function closePanels() { audio.playSfx('uiBack', { gain: .32, cooldown: 70 }); panels.forEach(panel => { panel.hidden = true; }); document.querySelector('#open-racers').focus(); }
+function closePanels() {
+  audio.playSfx('uiBack', { gain: .32, cooldown: 70 });
+  if (returnToRace) { location.href = '../game/'; return; }
+  panels.forEach(panel => { panel.hidden = true; }); document.querySelector('#open-racers').focus();
+}
 
 function persistSetting(key, value) { localStorage.setItem(`dlikarts.${key}`, value); }
 function loadSetting(key, input, fallback) { const value = localStorage.getItem(`dlikarts.${key}`) ?? fallback; input.value = value; syncOutput(input); }
 function syncOutput(input) { const output = document.querySelector(`output[for="${input.id}"]`); if (output) output.textContent = `${input.value}%`; }
 
 document.querySelector('#skip-intro').addEventListener('click', async () => { await audio.unlock(); playSelect(); requestMobileFullscreen(); revealMenu(); });
-window.setTimeout(revealMenu, 2100);
+if (requestedPanel === 'settings') {
+  splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
+  requestAnimationFrame(() => openPanel('settings-panel'));
+} else window.setTimeout(revealMenu, 2100);
 document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('racers-panel'); });
 document.querySelector('#open-howto').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('howto-panel'); });
 document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('settings-panel'); }));

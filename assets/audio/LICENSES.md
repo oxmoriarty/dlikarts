@@ -19,6 +19,20 @@ License: CC0 1.0 Universal
 Attribution required: No
 Modifications: Renamed for the runtime; no audio conversion or editing.
 
+### reverse-alert.wav
+
+Original asset: `car2.wav`
+
+Creator: Yaroslav_Novikov
+
+Source: https://opengameart.org/content/car-signal
+
+License: CC0 1.0 Universal
+
+Attribution required: No
+
+Modifications: Renamed for the runtime; no audio conversion or editing.
+
 ### boost.ogg
 
 Original asset: `thrusterFire_002.ogg`  

@@ -13,7 +13,7 @@ import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=audio-events-1';
 import { UI } from './ui/UI.js?v=audio-ui-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
-import { AudioManager } from './audio/AudioManager.js?v=audio-stability-3';
+import { AudioManager } from './audio/AudioManager.js?v=audio-stability-4';
 
 const canvas = document.querySelector('#game');
 const ui = new UI();
@@ -83,7 +83,22 @@ function requestMobileFullscreen() {
   try { request.call(target)?.catch?.(() => {}); } catch { /* Browser declined fullscreen. */ }
 }
 
-document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
+function setRacePaused(paused) {
+  if (!game || game.race.state === 'RESULTS') return;
+  game.paused = paused;
+  input.clear();
+  audio.setGameplayPaused(paused);
+  document.querySelector('#pause-panel').hidden = !paused;
+  const button = document.querySelector('#pause-race');
+  button.setAttribute('aria-label', paused ? 'Resume race' : 'Pause race');
+  button.setAttribute('aria-pressed', String(paused));
+}
+
+document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
+document.querySelector('#pause-race').addEventListener('click', async () => { await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
+document.querySelector('#resume-race').addEventListener('click', async () => { await audio.unlock(); setRacePaused(false); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); });
+document.querySelector('#open-race-settings').addEventListener('click', () => { if (!game) return; setRacePaused(true); location.href = '../landing/?panel=settings&return=game'; });
+document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/'; });
 
 function resolveKartCollisions(racers) {
   for (let i = 0; i < racers.length; i += 1) for (let j = i + 1; j < racers.length; j += 1) {
@@ -119,14 +134,15 @@ function retireFinishedCpuVisuals(dt, racers) {
 }
 
 function update(dt) {
-  if (!game) return; const { race, player, racers, track, powerups } = game; game.clock += dt;
+  if (!game || game.paused) return; const { race, player, racers, track, powerups } = game; game.clock += dt;
   input.clear(); keyboardInput.update(); touchInput.update();
   const enabled = race.state === 'RACING' || race.state === 'PLAYER_FINISHED';
   if (input.consume('item') && enabled) powerups.use(player); if (input.consume('recover')) input.recover = true;
   const playerActions = autoplaySmokeTest ? game.playerAI.update(dt) : input;
+  player.lastActions = playerActions;
   if (autoplaySmokeTest && playerActions.useItem && enabled) powerups.use(player);
   player.kart.update(dt, playerActions, track, enabled && race.state === 'RACING');
-  for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt, racers, powerups); if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
+  for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt, racers, powerups); racer.lastActions = actions; if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
   resolveKartCollisions(racers); powerups.update(dt, racers); race.update(dt); audio.update(game, playerActions, dt);
   track.setFinalLapVisual(previewFinish || player.lap >= LAPS - 1);
   retireFinishedCpuVisuals(dt, racers); racers.forEach(racer => { if (!racer.retired) racer.visual.update(dt); });
