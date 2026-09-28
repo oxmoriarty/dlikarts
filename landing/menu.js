@@ -1,4 +1,5 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-4';
+import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
@@ -10,18 +11,11 @@ const requestedPanel = new URLSearchParams(location.search).get('panel');
 const requestedView = new URLSearchParams(location.search).get('view');
 const returnToRace = new URLSearchParams(location.search).get('return') === 'game';
 const playSelect = () => audio.playSfx('uiSelect', { gain: .34, cooldown: 70 });
+prepareMobilePresentation();
 
 function revealMenu() {
   splash.classList.add('leaving');
   window.setTimeout(() => { splash.hidden = true; menu.hidden = false; menu.classList.add('entered'); }, 460);
-}
-
-function requestMobileFullscreen() {
-  const mobileLayout = matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
-  const target = document.documentElement;
-  const request = target.requestFullscreen || target.webkitRequestFullscreen;
-  if (!mobileLayout || document.fullscreenElement || !request) return;
-  try { request.call(target)?.catch?.(() => {}); } catch { /* Browser declined fullscreen. */ }
 }
 
 function openPanel(panelId) {
@@ -40,16 +34,16 @@ function persistSetting(key, value) { localStorage.setItem(`dlikarts.${key}`, va
 function loadSetting(key, input, fallback) { const value = localStorage.getItem(`dlikarts.${key}`) ?? fallback; input.value = value; syncOutput(input); }
 function syncOutput(input) { const output = document.querySelector(`output[for="${input.id}"]`); if (output) output.textContent = `${input.value}%`; }
 
-document.querySelector('#skip-intro').addEventListener('click', async () => { await audio.unlock(); playSelect(); requestMobileFullscreen(); revealMenu(); });
+document.querySelector('#skip-intro').addEventListener('click', async () => { await audio.unlock(); playSelect(); void requestMobilePresentation(); revealMenu(); });
 if (requestedPanel === 'settings') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
   requestAnimationFrame(() => openPanel('settings-panel'));
 } else if (requestedView === 'menu') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
 } else window.setTimeout(revealMenu, 2100);
-document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('racers-panel'); });
-document.querySelector('#open-howto').addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('howto-panel'); });
-document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', async () => { await audio.unlock(); requestMobileFullscreen(); openPanel('settings-panel'); }));
+document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('racers-panel'); });
+document.querySelector('#open-howto').addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('howto-panel'); });
+document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('settings-panel'); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
 document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
 document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => { playSelect();

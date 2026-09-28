@@ -14,8 +14,10 @@ import { PowerupSystem } from './powerups/PowerupSystem.js?v=audio-events-1';
 import { UI } from './ui/UI.js?v=touch-control-modes-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
 import { AudioManager } from './audio/AudioManager.js?v=touch-control-modes-1';
+import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js';
 
 const canvas = document.querySelector('#game');
+prepareMobilePresentation();
 const ui = new UI();
 const audio = new AudioManager(); ui.bindAudio(audio);
 let profileName = chooseQuality(); document.querySelector('#quality').value = profileName;
@@ -75,14 +77,6 @@ function createGame(characterGltf, kartGltf) {
   return { track, racers, player: racers[0], playerAI: new RacingLineAI(racers[0], track, 0), race, powerups, cameraTarget: new THREE.Vector3(), cameraPosition: new THREE.Vector3(), clock: 0 };
 }
 
-function requestMobileFullscreen() {
-  const mobileLayout = matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
-  const target = document.documentElement;
-  const request = target.requestFullscreen || target.webkitRequestFullscreen;
-  if (!mobileLayout || document.fullscreenElement || !request) return;
-  try { request.call(target)?.catch?.(() => {}); } catch { /* Browser declined fullscreen. */ }
-}
-
 function setRacePaused(paused) {
   if (!game || game.race.state === 'RESULTS') return;
   game.paused = paused;
@@ -94,7 +88,7 @@ function setRacePaused(paused) {
   button.setAttribute('aria-pressed', String(paused));
 }
 
-document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); requestMobileFullscreen(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
+document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); void requestMobilePresentation(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
 document.querySelector('#pause-race').addEventListener('click', async () => { await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
 document.querySelector('#resume-race').addEventListener('click', async () => { await audio.unlock(); setRacePaused(false); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); });
 // Direct routes paint their intended menu view immediately, so neither action

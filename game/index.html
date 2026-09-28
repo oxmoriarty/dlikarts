@@ -6,6 +6,8 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#07101b" />
+    <link rel="manifest" href="../manifest.webmanifest" />
     <title>DliKarts — Switchback Yard</title>
     <link rel="stylesheet" href="./styles.css?v=touch-control-modes-2" />
     <link rel="stylesheet" href="./mobile.css?v=touch-control-modes-3" />
@@ -30,6 +32,6 @@
     <section id="results" class="screen results" aria-label="Race results"><p class="eyebrow">RACE COMPLETE</p><h2 id="result-place">1ST PLACE</h2><dl><div><dt>RACE TIME</dt><dd id="result-time">0:00.00</dd></div><div><dt>BEST LAP</dt><dd id="result-best">0:00.00</dd></div></dl><button id="retry">RACE AGAIN</button></section>
     <div id="touch-controls" aria-label="Touch racing controls"><div class="touch-left"><button data-touch="left" class="touch-icon steer-left" aria-label="Steer left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 4-8 8 8 8" /></svg></button><button data-touch="right" class="touch-icon steer-right" aria-label="Steer right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 4 8 8-8 8" /></svg></button></div><div class="touch-right"><button data-touch="accelerate" class="touch-icon accelerate" aria-label="Accelerate"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l2 18H6L8 3Z" /><path d="M12 7v9m-3-3h6" /></svg></button><button data-touch="brake" class="touch-icon brake" aria-label="Brake or reverse"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l2 18H6L8 3Z" /><path d="M9 8h6M9 12h6M9 16h6" /></svg></button><button data-touch="drift" class="touch-icon drift-control" aria-label="Drift"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16c2-5 5-7 9-7 3 0 5 1 7 4" /><path d="m16 5 4 8-8 1M4 20h13" /></svg></button><button id="touch-item" data-touch="item" class="touch-icon item-control empty" aria-label="No power-up available" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-8 12h6l-1 8 9-13h-6l1-7Z" /></svg></button><button data-touch="recover" class="touch-icon recover" aria-label="Recover kart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 0h4M5 4a8 8 0 1 1-1 11" /><path d="M12 8v5l3 2" /></svg></button></div></div>
     <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.1/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.1/examples/jsm/"}}</script>
-<script type="module" src="./main.js?v=touch-control-modes-1"></script>
+<script type="module" src="./main.js?v=mobile-presentation-1"></script>
   </body>
 </html>
