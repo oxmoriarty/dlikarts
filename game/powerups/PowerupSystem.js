@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ObjectPool } from '../core/ObjectPool.js';
-import { POWERUP_TUNING } from '../config/game-config.js?v=battle-pod-1';
+import { POWERUP_TUNING } from '../config/game-config.js?v=battle-pod-2';
 import { distanceToSegmentSqXZ } from './battlePodMath.js';
 import { POWERUP_VISUAL_IDENTITY } from './powerupIdentity.js';
 

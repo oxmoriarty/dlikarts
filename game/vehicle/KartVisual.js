@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tumbleGroundLift } from './tumbleMath.js';
 
 const find = (root, name) => root.getObjectByName(name);
 
@@ -14,6 +15,12 @@ export class KartVisual {
     }
     this.wheels = ['WHEEL_FL','WHEEL_FR','WHEEL_RL','WHEEL_RR'].map(name => find(this.model, name));
     this.front = ['STEER_WHEEL_FL','STEER_WHEEL_FR'].map(name => find(this.model, name)); this.steering = find(this.model, 'STEERING_WHEEL');
+    // Cache the complete kart/driver bounds once. Tumble then uses this small
+    // numeric bound instead of a per-frame scene traversal to keep the model
+    // above the solid road plane while it rolls.
+    this.model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(this.model);
+    this.tumbleBounds = { minX: box.min.x, maxX: box.max.x, minY: box.min.y, maxY: box.max.y, minZ: box.min.z, maxZ: box.max.z };
   }
   play(name) { const next = this.actions.get(name); if (!next || this.active === next) return; if (this.active) this.active.fadeOut(.12); next.reset().fadeIn(.12).play(); this.active = next; }
   update(dt) {
@@ -25,8 +32,9 @@ export class KartVisual {
     // Battle Pod rolls the complete kart/driver model through a full visible
     // tumble while physics keeps the racer recoverable on the racing surface.
     const tumble = this.kart.tumbleAngle || 0;
-    this.model.rotation.z = this.kart.lean + tumble;
-    this.model.rotation.x = this.kart.pitch + Math.sin(tumble) * .16;
+    const roll = this.kart.lean + tumble, pitch = this.kart.pitch + Math.sin(tumble) * .16;
+    this.model.rotation.z = roll; this.model.rotation.x = pitch;
+    if (tumble) this.root.position.y += tumbleGroundLift(this.tumbleBounds, roll, pitch);
     this.wheels.forEach(wheel => { if (wheel) wheel.rotation.x = this.distance; });
     const angle = -this.kart.lean * 1.3; this.front.forEach(node => { if (node) node.rotation.z = angle; }); if (this.steering) this.steering.rotation.y = angle * 6;
     if (this.mixer) { this.mixer.update(dt); this.play(this.kart.drift ? (this.kart.lean > 0 ? 'steer-right' : 'steer-left') : 'seated-idle'); }

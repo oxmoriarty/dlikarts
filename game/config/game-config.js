@@ -12,7 +12,7 @@ export const POWERUP_TUNING = Object.freeze({
   battlePodLifetime: 3.25,
   battlePodHitRadius: 1.35,
   battlePodTumbleSeconds: .86,
-  battlePodTumbleTurns: 1.1,
+  battlePodTumbleTurns: 1,
 });
 
 // CPU pilots use the same arcade controller as the player. These values only

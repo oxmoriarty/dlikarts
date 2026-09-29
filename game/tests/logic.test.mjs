@@ -6,6 +6,7 @@ import { RaceSystem } from '../race/RaceSystem.js';
 import { POWERUP_TUNING } from '../config/game-config.js';
 import { distanceToSegmentSqXZ } from '../powerups/battlePodMath.js';
 import { POWERUP_VISUAL_IDENTITY } from '../powerups/powerupIdentity.js';
+import { minimumRotatedY, tumbleGroundLift } from '../vehicle/tumbleMath.js';
 
 const tiers = [{ name:'SPARK', seconds:.45 },{ name:'FLARE', seconds:1.15 },{ name:'COMET', seconds:2.1 }];
 test('drift tiers use threshold data', () => {
@@ -71,6 +72,14 @@ test('power-up identities map blue mascot to Halo Guard and purple halo to Battl
 test('Battle Pod segment hit testing catches a kart crossed between frames', () => {
   assert.equal(distanceToSegmentSqXZ({ x: 5, z: .5 }, { x: 0, z: 0 }, { x: 10, z: 0 }), .25);
   assert.ok(distanceToSegmentSqXZ({ x: 5, z: 2 }, { x: 0, z: 0 }, { x: 10, z: 0 }) > 1.35 ** 2);
+});
+
+test('a tumbling kart is lifted above the solid road for every roll orientation', () => {
+  const bounds = { minX: -1.1, maxX: 1.1, minY: 0, maxY: 1.7, minZ: -1.4, maxZ: 1.4 };
+  for (const roll of [0, Math.PI / 2, Math.PI, Math.PI * 1.5, Math.PI * 2]) {
+    const lift = tumbleGroundLift(bounds, roll, .16);
+    assert.ok(minimumRotatedY(bounds, roll, .16) + lift >= -1e-9);
+  }
 });
 
 test('player receives a lap marker at race start and at each new valid lap', () => {
