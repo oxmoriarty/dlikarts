@@ -45,18 +45,41 @@ html,body,#game{height:100%;height:100dvh;overscroll-behavior:none}body,body *{-
    the item/drift stack on the outer-right edge. The supplied art contains its
    own transparent circular/pedal treatments, so the buttons add no backdrop. */
 @media (pointer:coarse) and (orientation:landscape), (max-width:760px) and (orientation:landscape){
+  body #touch-controls{
+    --steer-size:clamp(62px,12vw,92px);
+    --pedal-size:clamp(70px,12.5vw,96px);
+    --brake-size:clamp(62px,10.7vw,82px);
+    --stack-size:clamp(64px,11.8vw,88px);
+    --control-gap:clamp(14px,3.8vw,28px);
+    --stack-gap:clamp(8px,1.5vw,12px);
+  }
+  /* Keep the surrounding race UI in proportion with the same device width,
+     so controls do not scale independently from the information display. */
+  .hud-top{gap:clamp(5px,1vw,10px);padding:clamp(4px,.7vw,8px) clamp(6px,1vw,12px);font-size:clamp(8px,1.3vw,12px)}
+  .hud-bottom{gap:clamp(3px,.7vw,8px)}
+  .item,.drift{min-width:clamp(60px,10vw,118px);padding:clamp(4px,.7vw,8px) clamp(5px,.8vw,10px);font-size:clamp(7px,1vw,11px)}
+  .item b,.drift b{font-size:clamp(7px,1.15vw,11px)}
+  #debug{font-size:clamp(6px,.9vw,9px)}
+  #race-actions{gap:clamp(8px,1.7vw,18px)}
+  .race-tool{width:clamp(28px,4.7vw,34px);height:clamp(28px,4.7vw,34px)}
+  .race-tool svg{width:clamp(25px,4.2vw,31px);height:clamp(25px,4.2vw,31px)}
+  #countdown{font-size:clamp(72px,18vw,140px)}
+  #lap-banner{font-size:clamp(20px,3.4vw,32px)}
   body #touch-controls .touch-left{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));display:flex;gap:18px;align-items:center}
-  body #touch-controls .touch-left .touch-icon{width:92px!important;height:92px!important;min-width:92px!important;padding:0}
+  body #touch-controls .touch-left .touch-icon{width:var(--steer-size)!important;height:var(--steer-size)!important;min-width:var(--steer-size)!important;padding:0}
+  /* Supplied steering art already contains its own highlights. Keep the left
+     control clean rather than adding an extra CSS glow around it. */
+  body #touch-controls .touch-left .steer-left{filter:none!important}
   body #touch-controls .touch-left .touch-icon img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
 
-  body #touch-controls .touch-right{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:block;width:232px;height:292px;pointer-events:none}
+  body #touch-controls .touch-right{position:fixed;right:max(8px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:block;width:calc(var(--brake-size) + var(--pedal-size) + var(--control-gap));height:calc(var(--pedal-size) + var(--stack-size) + var(--stack-size) + var(--stack-gap) + var(--stack-gap));pointer-events:none}
   body #touch-controls .touch-right .touch-icon{position:absolute;display:grid;place-items:center;padding:0;background:transparent!important;border:0!important;pointer-events:auto;filter:drop-shadow(0 3px 7px rgba(0,0,0,.58))}
   body #touch-controls .touch-right .touch-icon img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
-  body #touch-controls .touch-right .accelerate{right:0;bottom:0;width:98px!important;height:98px!important;min-width:98px!important}
-  body #touch-controls .touch-right .brake{right:126px;bottom:0;width:98px!important;height:98px!important;min-width:98px!important}
-  body #touch-controls .touch-right .drift-control{right:0;bottom:108px;width:88px!important;height:88px!important;min-width:88px!important}
-  body #touch-controls #touch-item{position:absolute!important;top:auto!important;left:auto!important;right:0;bottom:202px;width:88px!important;height:88px!important;min-width:88px!important;color:initial}
-  body #touch-controls #touch-item .powerup-art{display:block;width:88px;height:88px;filter:drop-shadow(0 0 6px rgba(128,231,255,.55))}
+  body #touch-controls .touch-right .accelerate{right:0;bottom:0;width:var(--pedal-size)!important;height:var(--pedal-size)!important;min-width:var(--pedal-size)!important}
+  body #touch-controls .touch-right .brake{right:calc(var(--pedal-size) + var(--control-gap));bottom:0;width:var(--brake-size)!important;height:var(--brake-size)!important;min-width:var(--brake-size)!important}
+  body #touch-controls .touch-right .drift-control{right:0;bottom:calc(var(--pedal-size) + var(--stack-gap));width:var(--stack-size)!important;height:var(--stack-size)!important;min-width:var(--stack-size)!important}
+  body #touch-controls #touch-item{position:absolute!important;top:auto!important;left:auto!important;right:0;bottom:calc(var(--pedal-size) + var(--stack-gap) + var(--stack-gap) + var(--stack-size));width:var(--stack-size)!important;height:var(--stack-size)!important;min-width:var(--stack-size)!important;color:initial}
+  body #touch-controls #touch-item .powerup-art{display:block;width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(128,231,255,.55))}
   body #touch-controls #touch-item.empty{visibility:hidden;pointer-events:none;opacity:0}
   body #touch-controls .touch-right .recover{display:none!important}
   body[data-touch-steering="screen"] #touch-controls .touch-left{display:none!important}
