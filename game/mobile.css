@@ -30,7 +30,7 @@ button{touch-action:none}
     --stack-gap:clamp(8px,1.4vw,12px);
     --screen-edge:max(8px,env(safe-area-inset-right));
     --bottom-edge:max(16px,env(safe-area-inset-bottom));
-    --stack-top:calc(50% + clamp(6px,1.5vh,14px));
+    --stack-bottom:calc(var(--bottom-edge) + var(--accelerate-size) + var(--stack-gap));
   }
 
   /* The left/right, held-item, and drift targets intentionally share one size. */
@@ -51,22 +51,15 @@ button{touch-action:none}
   body #touch-controls .touch-right .accelerate{right:var(--screen-edge);bottom:var(--bottom-edge);width:var(--accelerate-size)!important;height:var(--accelerate-size)!important;min-width:var(--accelerate-size)!important}
   body #touch-controls .touch-right .brake{right:calc(var(--screen-edge) + var(--accelerate-size) + var(--pedal-gap));bottom:var(--bottom-edge);width:var(--brake-size)!important;height:var(--brake-size)!important;min-width:var(--brake-size)!important}
 
-  /* The held power-up sits directly above Drift. It remains empty/invisible
-     until the player has a usable item, rather than rendering a placeholder. */
-  body #touch-controls #touch-item{position:fixed!important;right:var(--screen-edge);top:var(--stack-top);bottom:auto;left:auto;color:initial}
+  /* The held power-up sits directly above Drift on the outer-right edge. It
+     remains empty/invisible until the player has a usable item. */
+  body #touch-controls #touch-item{position:fixed!important;right:var(--screen-edge);top:auto;bottom:calc(var(--stack-bottom) + var(--command-size) + var(--stack-gap));left:auto;color:initial}
   body #touch-controls #touch-item .powerup-art{display:block;width:100%;height:100%;filter:none!important}
   body #touch-controls #touch-item.empty{visibility:hidden;pointer-events:none;opacity:0}
-  body #touch-controls .touch-right .drift-control{right:var(--screen-edge);top:calc(var(--stack-top) + var(--command-size) + var(--stack-gap));bottom:auto}
+  body #touch-controls .touch-right .drift-control{right:var(--screen-edge);top:auto;bottom:var(--stack-bottom)}
   body #touch-controls .touch-right .recover{display:none!important}
   body[data-touch-steering="screen"] #touch-controls .touch-left{display:none!important}
   body[data-touch-steering="screen"] #game{cursor:ew-resize}
-}
-
-/* Very short landscape screens cannot fit a two-control stack above the
-   pedals. Keep it in the right half but move it left of the pedal cluster. */
-@media (pointer:coarse) and (orientation:landscape) and (max-height:540px), (max-width:760px) and (orientation:landscape) and (max-height:540px){
-  body #touch-controls #touch-item,
-  body #touch-controls .touch-right .drift-control{right:calc(var(--screen-edge) + var(--accelerate-size) + var(--pedal-gap) + var(--brake-size) + 16px)}
 }
 
 @media (max-width:760px) and (orientation:portrait){.rotate{display:grid}}
