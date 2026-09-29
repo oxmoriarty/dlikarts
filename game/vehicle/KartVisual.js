@@ -21,7 +21,12 @@ export class KartVisual {
     // The exported GLB's visual nose points opposite the controller's +Z-forward
     // convention after glTF axis conversion. Keep that adaptation at this single
     // asset boundary so physics, track, and camera all retain one forward axis.
-    this.root.position.copy(this.kart.position); this.root.rotation.set(0, this.kart.yaw + Math.PI, 0); this.model.rotation.z = this.kart.lean; this.model.rotation.x = this.kart.pitch;
+    this.root.position.copy(this.kart.position); this.root.rotation.set(0, this.kart.yaw + Math.PI, 0);
+    // Battle Pod rolls the complete kart/driver model through a full visible
+    // tumble while physics keeps the racer recoverable on the racing surface.
+    const tumble = this.kart.tumbleAngle || 0;
+    this.model.rotation.z = this.kart.lean + tumble;
+    this.model.rotation.x = this.kart.pitch + Math.sin(tumble) * .16;
     this.wheels.forEach(wheel => { if (wheel) wheel.rotation.x = this.distance; });
     const angle = -this.kart.lean * 1.3; this.front.forEach(node => { if (node) node.rotation.z = angle; }); if (this.steering) this.steering.rotation.y = angle * 6;
     if (this.mixer) { this.mixer.update(dt); this.play(this.kart.drift ? (this.kart.lean > 0 ? 'steer-right' : 'steer-left') : 'seated-idle'); }

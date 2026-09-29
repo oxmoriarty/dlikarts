@@ -4,6 +4,8 @@ import { driftTier, canStartDrift } from '../vehicle/driftMath.js';
 import { compareRacers, nearProgress, crossedProgress } from '../race/raceMath.js';
 import { RaceSystem } from '../race/RaceSystem.js';
 import { POWERUP_TUNING } from '../config/game-config.js';
+import { distanceToSegmentSqXZ } from '../powerups/battlePodMath.js';
+import { POWERUP_VISUAL_IDENTITY } from '../powerups/powerupIdentity.js';
 
 const tiers = [{ name:'SPARK', seconds:.45 },{ name:'FLARE', seconds:1.15 },{ name:'COMET', seconds:2.1 }];
 test('drift tiers use threshold data', () => {
@@ -52,6 +54,23 @@ test('finished CPU is recorded once and immediately stops participating', () => 
 test('Halo Guard duration stays inside the specified six-to-eight-second window', () => {
   assert.equal(POWERUP_TUNING.haloGuardSeconds, 7);
   assert.ok(POWERUP_TUNING.haloGuardSeconds >= 6 && POWERUP_TUNING.haloGuardSeconds <= 8);
+});
+
+test('Battle Pod is a fast, long-range missile with an explicit tumble impact', () => {
+  assert.ok(POWERUP_TUNING.battlePodSpeed >= 30);
+  assert.ok(POWERUP_TUNING.battlePodSpeed * POWERUP_TUNING.battlePodLifetime >= 100);
+  assert.ok(POWERUP_TUNING.battlePodTumbleSeconds >= .75);
+  assert.ok(POWERUP_TUNING.battlePodTumbleTurns >= 1);
+});
+
+test('power-up identities map blue mascot to Halo Guard and purple halo to Battle Pod', () => {
+  assert.equal(POWERUP_VISUAL_IDENTITY['HALO GUARD'], 'blue-mascot');
+  assert.equal(POWERUP_VISUAL_IDENTITY['RATTLE POD'], 'purple-halo');
+});
+
+test('Battle Pod segment hit testing catches a kart crossed between frames', () => {
+  assert.equal(distanceToSegmentSqXZ({ x: 5, z: .5 }, { x: 0, z: 0 }, { x: 10, z: 0 }), .25);
+  assert.ok(distanceToSegmentSqXZ({ x: 5, z: 2 }, { x: 0, z: 0 }, { x: 10, z: 0 }) > 1.35 ** 2);
 });
 
 test('player receives a lap marker at race start and at each new valid lap', () => {

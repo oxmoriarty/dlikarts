@@ -12,15 +12,26 @@ export class ArcadeKart {
     this.yaw = pose.yaw; this.previousYaw = pose.yaw; this.progress = pose.progress; this.speed = 0; this.lateralSpeed = 0; this.verticalSpeed = 0;
     this.grounded = true; this.drift = false; this.driftDirection = 0; this.driftCharge = 0; this.boostTimer = 0; this.boostStrength = 0;
     this.airborne = false; this.jumpUsed = false; this.offRoad = false; this.hitTimer = 0; this.wallImpact = 0; this.guardTimer = 0; this.item = null; this.finished = false;
+    this.tumbleTimer = 0; this.tumbleDuration = 0; this.tumbleTurns = 0; this.tumbleDirection = 1; this.tumbleAngle = 0;
     this.lean = 0; this.pitch = 0; this.recoveryTimer = 0; this.lastSafe = pose.position.clone(); this.lastSafeYaw = pose.yaw;
   }
   forward(out = new THREE.Vector3()) { return out.set(Math.sin(this.yaw), 0, Math.cos(this.yaw)); }
   right(out = new THREE.Vector3()) { return out.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw)); }
   giveBoost(tier) { if (!tier) return; this.boostTimer = tier.duration; this.boostStrength = tier.strength; }
   releaseDrift() { const tier = driftTier(this.driftCharge, this.tuning.driftTiers); this.giveBoost(tier); this.drift = false; this.driftCharge = 0; return tier; }
-  reset() { this.position.copy(this.lastSafe); this.previousPosition.copy(this.lastSafe); this.yaw = this.previousYaw = this.lastSafeYaw; this.speed = 0; this.lateralSpeed = 0; this.verticalSpeed = 0; this.airborne = false; this.drift = false; this.driftCharge = 0; this.boostTimer = 0; }
+  applyTumble(duration, impactDirection, turns = 1) {
+    const lateral = this.right().dot(impactDirection);
+    this.tumbleDirection = Math.sign(lateral) || (this.id.length % 2 ? 1 : -1);
+    this.tumbleDuration = duration; this.tumbleTimer = duration; this.tumbleTurns = turns;
+    this.tumbleAngle = 0; this.hitTimer = Math.max(this.hitTimer, duration);
+    this.drift = false; this.driftCharge = 0; this.speed *= .35; this.lateralSpeed = this.tumbleDirection * 8;
+  }
+  reset() { this.position.copy(this.lastSafe); this.previousPosition.copy(this.lastSafe); this.yaw = this.previousYaw = this.lastSafeYaw; this.speed = 0; this.lateralSpeed = 0; this.verticalSpeed = 0; this.airborne = false; this.drift = false; this.driftCharge = 0; this.boostTimer = 0; this.tumbleTimer = 0; this.tumbleAngle = 0; }
   update(dt, input, track, enabled = true) {
-    this.previousPosition.copy(this.position); this.previousYaw = this.yaw; this.hitTimer = Math.max(0, this.hitTimer - dt); this.guardTimer = Math.max(0, this.guardTimer - dt);
+    this.previousPosition.copy(this.position); this.previousYaw = this.yaw; this.hitTimer = Math.max(0, this.hitTimer - dt); this.guardTimer = Math.max(0, this.guardTimer - dt); this.tumbleTimer = Math.max(0, this.tumbleTimer - dt);
+    const tumbling = this.tumbleTimer > 0;
+    const tumbleProgress = this.tumbleDuration > 0 ? 1 - this.tumbleTimer / this.tumbleDuration : 1;
+    this.tumbleAngle = tumbling ? tumbleProgress * Math.PI * 2 * this.tumbleTurns * this.tumbleDirection : 0;
     const qBefore = track.query(this.position, this.progress); this.progress = qBefore.t; this.offRoad = !qBefore.onRoad;
     const groundY = qBefore.p.y + track.roadSurfaceOffset + this.wheelGroundOffset;
     // Countdown/ready karts must use the same physical ground contact as
@@ -28,7 +39,7 @@ export class ArcadeKart {
     // height and made every kart visibly hover before the green light.
     if (!enabled || this.finished) { this.speed = Math.max(0, this.speed - this.tuning.brakeDeceleration * dt); this.position.y = groundY; return; }
     if (input.recover) { this.reset(); return; }
-    const forwardInput = input.throttle || 0, brake = input.brake || 0, steer = input.steer || 0;
+    const forwardInput = tumbling ? 0 : input.throttle || 0, brake = tumbling ? 0 : input.brake || 0, steer = tumbling ? 0 : input.steer || 0;
     const boost = this.boostTimer > 0; if (boost) this.boostTimer -= dt;
     const maxSpeed = this.offRoad ? this.tuning.offRoadMaxSpeed : this.tuning.maxSpeed;
     // BRAKE has deliberate priority. This removes the old mobile case where
@@ -39,6 +50,7 @@ export class ArcadeKart {
       if (this.speed > 0) this.speed = Math.max(0, this.speed - this.tuning.brakeDeceleration * brake * dt);
       else this.speed -= this.tuning.reverseAcceleration * brake * dt;
     }
+    if (tumbling) this.speed -= Math.sign(this.speed) * Math.min(Math.abs(this.speed), this.tuning.brakeDeceleration * .45 * dt);
     const drag = this.offRoad ? this.tuning.offRoadDrag : this.tuning.rollingDrag;
     this.speed -= Math.sign(this.speed) * Math.min(Math.abs(this.speed), drag * dt);
     this.speed = clamp(this.speed, -this.tuning.reverseMaxSpeed, maxSpeed + (boost ? this.boostStrength : 0));

@@ -6,6 +6,13 @@ export const LAPS = 3;
 // be balanced without touching rendering or collision code.
 export const POWERUP_TUNING = Object.freeze({
   haloGuardSeconds: 7,
+  // Battle Pod is a deliberate, long-range straight missile. Its impact
+  // duration is shared with the kart controller for a readable tumble.
+  battlePodSpeed: 34,
+  battlePodLifetime: 3.25,
+  battlePodHitRadius: 1.35,
+  battlePodTumbleSeconds: .86,
+  battlePodTumbleTurns: 1.1,
 });
 
 // CPU pilots use the same arcade controller as the player. These values only
@@ -36,7 +43,7 @@ export const CPU_TUNING = Object.freeze({
   pickupLookAhead: 0.085,
   pickupWeight: 5.5,
   itemCooldown: 0.9,
-  projectileRange: 23,
+  projectileRange: 48,
 });
 
 export const KART_TUNING = Object.freeze({

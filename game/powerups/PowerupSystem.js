@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { ObjectPool } from '../core/ObjectPool.js';
-import { POWERUP_TUNING } from '../config/game-config.js?v=shield-and-checkers';
+import { POWERUP_TUNING } from '../config/game-config.js?v=battle-pod-1';
+import { distanceToSegmentSqXZ } from './battlePodMath.js';
+import { POWERUP_VISUAL_IDENTITY } from './powerupIdentity.js';
 
 const TYPES = ['ZIPCAP', 'RATTLE POD', 'HALO GUARD'];
 const PICKUP_RADIUS = 1.35;
@@ -78,7 +80,9 @@ function createHaloPickup() {
 
 function createPickupModel(type) {
   if (type === 'ZIPCAP') return createSpeedPickup();
-  if (type === 'RATTLE POD') return createMascotPickup();
+  // The cobalt mascot now represents the protective Halo Guard. The purple
+  // ringed pod is Battle Pod, the offensive missile pickup.
+  if (POWERUP_VISUAL_IDENTITY[type] === 'blue-mascot') return createMascotPickup();
   return createHaloPickup();
 }
 
@@ -107,8 +111,8 @@ export class PowerupSystem {
     mesh.position.copy(s.p).addScaledVector(s.normal, pickupLanes[index]); mesh.position.y += .62; mesh.castShadow = true; this.scene.add(mesh); this.pickups.push({ progress, type: TYPES[index % 3], mesh, baseY: mesh.position.y, timer: 0 });
   }
   createProjectile() {
-    const mesh = createMascotPickup(); mesh.name = 'PROJECTILE_DILI_MASCOT'; mesh.scale.setScalar(.72); mesh.visible = false; this.scene.add(mesh);
-    return { active: false, mesh, direction: new THREE.Vector3(), speed: 17, owner: null, age: 0 };
+    const mesh = createHaloPickup(); mesh.name = 'PROJECTILE_BATTLE_POD'; mesh.scale.setScalar(.78); mesh.visible = false; this.scene.add(mesh);
+    return { active: false, mesh, direction: new THREE.Vector3(), previousPosition: new THREE.Vector3(), speed: POWERUP_TUNING.battlePodSpeed, owner: null, age: 0 };
   }
   update(dt, racers) {
     this.pickups.forEach(pickup => { if (pickup.timer > 0) { pickup.timer -= dt; pickup.mesh.visible = false; return; } pickup.mesh.visible = true; pickup.mesh.rotation.y += dt * 2.4; pickup.mesh.position.y = pickup.baseY + Math.sin(performance.now() * .004 + pickup.progress * 8) * .06; for (const racer of racers) {
@@ -120,11 +124,23 @@ export class PowerupSystem {
       if (dx * dx + dz * dz <= PICKUP_RADIUS * PICKUP_RADIUS) { racer.kart.item = pickup.type; pickup.timer = 5; this.events.push({ type: 'pickup', racer, powerup: pickup.type }); break; }
     } });
     this.projectiles.items.forEach(projectile => { if (!projectile.active) return; projectile.age += dt;
-      // `direction` is captured exactly once on firing. Nothing tracks a
-      // target or the owner's later steering, so this travels as a straight,
-      // horizontal missile for its full lifetime.
+      // Battle Pod captures a heading once and stays on that long, fast,
+      // horizontal trajectory. Segment hit testing keeps it reliable at
+      // missile speed instead of allowing a racer to slip between frames.
+      projectile.previousPosition.copy(projectile.mesh.position);
       projectile.mesh.position.addScaledVector(projectile.direction, projectile.speed * dt);
-      if (projectile.age > 2.2) return this.hideProjectile(projectile); for (const target of racers) { if (target === projectile.owner || target.kart.finished || target.kart.guardTimer > 0) continue; if (target.kart.position.distanceToSquared(projectile.mesh.position) < 1.5) { target.kart.hitTimer = .5; target.kart.speed *= .55; target.kart.lateralSpeed += 5 * (Math.random() > .5 ? 1 : -1); this.hideProjectile(projectile); break; } } });
+      if (projectile.age > POWERUP_TUNING.battlePodLifetime) return this.hideProjectile(projectile);
+      for (const target of racers) {
+        if (target === projectile.owner || target.kart.finished || target.kart.guardTimer > 0) continue;
+        if (distanceToSegmentSqXZ(target.kart.position, projectile.previousPosition, projectile.mesh.position) > POWERUP_TUNING.battlePodHitRadius ** 2) continue;
+        target.kart.applyTumble?.(POWERUP_TUNING.battlePodTumbleSeconds, projectile.direction, POWERUP_TUNING.battlePodTumbleTurns);
+        // Safeguard hot-reloaded clients which may momentarily retain an older
+        // controller module while the updated power-up module is active.
+        if (!target.kart.applyTumble) { target.kart.hitTimer = .86; target.kart.speed *= .35; target.kart.lateralSpeed += 8; }
+        this.hideProjectile(projectile);
+        break;
+      }
+    });
     racers.forEach(racer => this.updateGuard(racer));
   }
   use(racer) {
@@ -136,8 +152,8 @@ export class PowerupSystem {
     projectile.active = true; projectile.owner = racer; projectile.age = 0; projectile.mesh.visible = true;
     projectile.direction.copy(launchDirection);
     projectile.mesh.position.copy(racer.kart.position).addScaledVector(launchDirection, 1.1).add(new THREE.Vector3(0,.6,0));
-    // The mascot's face points along its fixed launch direction; it does not
-    // spin or curve after firing.
+    // The purple Battle Pod faces its fixed launch direction; it does not home
+    // or curve after firing.
     projectile.mesh.rotation.set(0, Math.atan2(launchDirection.x, launchDirection.z), 0);
     this.events.push({ type: 'use', racer, powerup: type });
     return true;
@@ -146,7 +162,7 @@ export class PowerupSystem {
   isProjectileThreat(racer) {
     // A shield is saved for a real incoming missile rather than activated as
     // soon as the CPU happens to pick it up. This keeps Halo Guard useful and
-    // gives every racer meaningful counterplay against Rattle Pod attacks.
+    // gives every racer meaningful counterplay against Battle Pod attacks.
     for (const projectile of this.projectiles.items) {
       if (!projectile.active || projectile.owner === racer) continue;
       const toRacer = racer.kart.position.clone().sub(projectile.mesh.position).setY(0);

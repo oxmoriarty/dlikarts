@@ -18,11 +18,11 @@ export class UI {
     this.lastTouchItem = item;
     const icons = {
       // These are the 2D HUD forms of the actual pickup models: Zipcap's
-      // twin cyan blades, Halo Guard's ringed purple orb, and Rattle Pod's
-      // cobalt mascot orb with arms and diamond eyes.
+      // twin cyan blades, Halo Guard's cobalt mascot orb, and Battle Pod's
+      // purple ringed pod.
       ZIPCAP: '<svg class="powerup-art" viewBox="0 0 100 100" aria-hidden="true"><path fill="#8deeff" d="M16 48 40 24 87 13 55 47 33 57Z"/><path fill="#8deeff" d="M13 87 46 55 67 44 54 76 29 92Z"/><path fill="#07131d" d="m50 39 12 12-12 12-12-12Z"/><path d="m50 35 16 16-16 16-16-16Z" fill="none" stroke="#8deeff" stroke-width="5"/></svg>',
-      'HALO GUARD': '<svg class="powerup-art" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="27" fill="#5e175d"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ff4fcc" stroke-width="6"/><circle cx="50" cy="50" r="31" fill="none" stroke="#ff81da" stroke-width="3" transform="rotate(45 50 50)"/><path fill="#e9f6ff" d="m36 46 7-7 7 7-7 7zm14 0 7-7 7 7-7 7z"/><path fill="#06133f" d="m40 45 3-3 3 3-3 3zm14 0 3-3 3 3-3 3z"/></svg>',
-      'RATTLE POD': '<svg class="powerup-art" viewBox="0 0 100 100" aria-hidden="true"><path d="m27 49-17-12m17 19L10 68" fill="none" stroke="#155cff" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="53" r="30" fill="#155cff"/><ellipse cx="50" cy="57" rx="23" ry="18" fill="#06133f"/><path fill="#e9f6ff" d="m35 49 8-8 8 8-8 8zm14 0 8-8 8 8-8 8z"/><path fill="#06133f" d="m39 48 4-4 4 4-4 4zm14 0 4-4 4 4-4 4z"/></svg>',
+      'HALO GUARD': '<svg class="powerup-art" viewBox="0 0 100 100" aria-hidden="true"><path d="m27 49-17-12m17 19L10 68" fill="none" stroke="#155cff" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="53" r="30" fill="#155cff"/><ellipse cx="50" cy="57" rx="23" ry="18" fill="#06133f"/><path fill="#e9f6ff" d="m35 49 8-8 8 8-8 8zm14 0 8-8 8 8-8 8z"/><path fill="#06133f" d="m39 48 4-4 4 4-4 4zm14 0 4-4 4 4-4 4z"/></svg>',
+      'RATTLE POD': '<svg class="powerup-art" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="27" fill="#5e175d"/><circle cx="50" cy="50" r="37" fill="none" stroke="#ff4fcc" stroke-width="6"/><circle cx="50" cy="50" r="31" fill="none" stroke="#ff81da" stroke-width="3" transform="rotate(45 50 50)"/><path fill="#e9f6ff" d="m36 46 7-7 7 7-7 7zm14 0 7-7 7 7-7 7z"/><path fill="#06133f" d="m40 45 3-3 3 3-3 3zm14 0 3-3 3 3-3 3z"/></svg>',
     };
     this.touchItem.dataset.powerup = item || 'EMPTY';
     this.touchItem.classList.toggle('empty', !item);
