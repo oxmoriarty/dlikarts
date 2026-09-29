@@ -40,3 +40,24 @@ html,body,#game{height:100%;height:100dvh;overscroll-behavior:none}body,body *{-
   body[data-touch-steering="screen"] #touch-controls .touch-left{display:none!important}
   body[data-touch-steering="screen"] #game{cursor:ew-resize}
 }
+
+/* Reference control composition: steering low-left, pedals low-right, and
+   the item/drift stack on the outer-right edge. The supplied art contains its
+   own transparent circular/pedal treatments, so the buttons add no backdrop. */
+@media (pointer:coarse) and (orientation:landscape), (max-width:760px) and (orientation:landscape){
+  body #touch-controls .touch-left{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));display:flex;gap:18px;align-items:center}
+  body #touch-controls .touch-left .touch-icon{width:92px!important;height:92px!important;min-width:92px!important;padding:0}
+  body #touch-controls .touch-left .touch-icon img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+
+  body #touch-controls .touch-right{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));display:block;width:232px;height:292px;pointer-events:none}
+  body #touch-controls .touch-right .touch-icon{position:absolute;display:grid;place-items:center;padding:0;background:transparent!important;border:0!important;pointer-events:auto;filter:drop-shadow(0 3px 7px rgba(0,0,0,.58))}
+  body #touch-controls .touch-right .touch-icon img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+  body #touch-controls .touch-right .accelerate{right:0;bottom:0;width:98px!important;height:98px!important;min-width:98px!important}
+  body #touch-controls .touch-right .brake{right:126px;bottom:0;width:98px!important;height:98px!important;min-width:98px!important}
+  body #touch-controls .touch-right .drift-control{right:0;bottom:108px;width:88px!important;height:88px!important;min-width:88px!important}
+  body #touch-controls #touch-item{position:absolute!important;top:auto!important;left:auto!important;right:0;bottom:202px;width:88px!important;height:88px!important;min-width:88px!important;color:initial}
+  body #touch-controls #touch-item .powerup-art{display:block;width:88px;height:88px;filter:drop-shadow(0 0 6px rgba(128,231,255,.55))}
+  body #touch-controls #touch-item.empty{visibility:hidden;pointer-events:none;opacity:0}
+  body #touch-controls .touch-right .recover{display:none!important}
+  body[data-touch-steering="screen"] #touch-controls .touch-left{display:none!important}
+}

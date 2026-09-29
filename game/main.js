@@ -11,7 +11,7 @@ import { KartVisual } from './vehicle/KartVisual.js';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=audio-events-1';
-import { UI } from './ui/UI.js?v=touch-control-modes-1';
+import { UI } from './ui/UI.js?v=mobile-controls-art-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
 import { AudioManager } from './audio/AudioManager.js?v=touch-control-modes-1';
 import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js';
