@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#07101b" />
     <link rel="manifest" href="../manifest.webmanifest" />
     <title>DliKarts — Race. Play. Repeat.</title>
-    <link rel="stylesheet" href="./styles.css?v=direct-routes-1" />
+    <link rel="stylesheet" href="./styles.css?v=dlicom-landing-1" />
     <link rel="stylesheet" href="./responsive.css" />
-    <link rel="stylesheet" href="./mobile.css?v=mobile-layout-1" />
+    <link rel="stylesheet" href="./mobile.css?v=dlicom-landing-1" />
     <script>
       // Run before body content paints, preventing a landing-screen flash when
       // the player intentionally goes straight to settings or the menu.
@@ -21,8 +21,10 @@
     </script>
   </head>
   <body>
-    <main class="garage-shell">
+    <main class="garage-shell dlicom-landing">
       <section class="splash" id="splash" aria-label="Loading DliKarts">
+        <picture class="cover-art splash-art" aria-hidden="true"><source media="(max-width: 760px) and (orientation: landscape)" srcset="../assets/landing/dlicom-racers-mobile.webp" /><img src="../assets/landing/dlicom-racers-desktop.webp" alt="" /></picture>
+        <div class="splash-wash" aria-hidden="true"></div>
         <div class="splash-track" aria-hidden="true"></div>
         <p class="eyebrow">DLICOM RACERS PRESENTS</p>
         <h1>DLI<span>KARTS</span></h1>
@@ -32,17 +34,18 @@
       </section>
 
       <section class="menu-screen" id="menu-screen" aria-label="DliKarts main menu" hidden>
-        <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+        <picture class="cover-art menu-art" aria-hidden="true"><source media="(max-width: 760px) and (orientation: landscape)" srcset="../assets/landing/dlicom-racers-mobile.webp" /><img src="../assets/landing/dlicom-racers-desktop.webp" alt="" /></picture>
+        <div class="menu-wash" aria-hidden="true"></div><div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
         <header class="topbar">
-          <a class="wordmark" href="./" aria-label="DliKarts home">DLI<span>KARTS</span></a>
+          <a class="wordmark" href="./" aria-label="DliKarts home"><img src="../assets/environment/branding/dlicom-logo-cutout.png" alt="" /><span class="wordmark-dli">DLI</span><span class="wordmark-karts">KARTS</span></a>
           <button class="icon-button" id="open-settings" aria-label="Open settings">⚙</button>
         </header>
 
         <div class="menu-layout">
           <div class="hero-copy">
-            <p class="eyebrow">SEASON ZERO / VERTICAL SLICE</p>
-            <h2>READY TO<br /><em>RACE?</em></h2>
-            <p class="hero-description">Pick your driver, hit the road, and make every corner count.</p>
+            <p class="eyebrow">DLICOM CITY CIRCUIT / SEASON ZERO</p>
+            <h2>RACE THE<br /><em>CITY.</em></h2>
+            <p class="hero-description">Pick your driver, hit the circuit, and make every corner count.</p>
             <div class="menu-actions" aria-label="Main actions">
               <button class="primary-button" id="open-racers">PLAY <span>→</span></button>
               <button class="secondary-button" id="open-howto">HOW TO RACE</button>
@@ -50,16 +53,9 @@
             </div>
           </div>
 
-          <div class="poster" aria-label="Guatam, first available DliKarts racer">
-            <div class="poster-checker" aria-hidden="true"></div>
-            <p class="poster-kicker">FIRST DRIVER ONLINE</p>
-            <img src="../references/Guatam/Guatam.png" alt="Guatam character reference art" />
-            <div class="poster-name"><span>01</span> GUATAM</div>
-            <p class="poster-note">THE FULL SIX-RACER COVER ARRIVES WITH THE COMPLETE ROSTER.</p>
-          </div>
         </div>
 
-        <footer><span>© DLIKARTS</span><span>BEST PLAYED IN LANDSCAPE ON MOBILE</span><a href="../prototype/">ASSET VIEWER</a></footer>
+        <footer><span>© DLIKARTS / DLICOM CITY</span><span>BEST PLAYED IN LANDSCAPE ON MOBILE</span><a href="../prototype/">ASSET VIEWER</a></footer>
       </section>
 
       <section class="panel racers-panel" id="racers-panel" aria-labelledby="racer-title" hidden>
@@ -87,6 +83,6 @@
         <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO UNLOCKS AFTER YOUR FIRST TAP OR CLICK.</p>
       </section>
     </main>
-    <script type="module" src="./menu.js?v=mobile-presentation-1"></script>
+    <script type="module" src="./menu.js?v=dlicom-landing-1"></script>
   </body>
 </html>
