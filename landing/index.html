@@ -6,12 +6,12 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#07101b" />
+    <meta name="theme-color" content="#020817" />
     <link rel="manifest" href="../manifest.webmanifest" />
-    <title>DliKarts — Race. Play. Repeat.</title>
-    <link rel="stylesheet" href="./styles.css?v=dlicom-landing-1" />
+    <title>Dlicom Racers — Race. Play. Repeat.</title>
+    <link rel="stylesheet" href="./styles.css?v=dlicom-menu-4" />
     <link rel="stylesheet" href="./responsive.css" />
-    <link rel="stylesheet" href="./mobile.css?v=dlicom-landing-1" />
+    <link rel="stylesheet" href="./mobile.css?v=dlicom-menu-4" />
     <script>
       // Run before body content paints, preventing a landing-screen flash when
       // the player intentionally goes straight to settings or the menu.
@@ -22,67 +22,67 @@
   </head>
   <body>
     <main class="garage-shell dlicom-landing">
-      <section class="splash" id="splash" aria-label="Loading DliKarts">
-        <picture class="cover-art splash-art" aria-hidden="true"><source media="(max-width: 760px) and (orientation: landscape)" srcset="../assets/landing/dlicom-racers-mobile.webp" /><img src="../assets/landing/dlicom-racers-desktop.webp" alt="" /></picture>
-        <div class="splash-wash" aria-hidden="true"></div>
+      <section class="splash" id="splash" aria-label="Loading Dlicom Racers">
         <div class="splash-track" aria-hidden="true"></div>
-        <p class="eyebrow">DLICOM RACERS PRESENTS</p>
-        <h1>DLI<span>KARTS</span></h1>
-        <p class="tagline">RACE. PLAY. REPEAT.</p>
-        <div class="loadline" aria-hidden="true"><i></i></div>
-        <button class="quiet-button" id="skip-intro">SKIP INTRO</button>
+        <div class="splash-content screen-frame">
+          <p class="eyebrow">DLICOM RACERS PRESENTS</p>
+          <h1>DLICOM <span>RACERS</span></h1>
+          <p class="tagline">RACE. PLAY. REPEAT.</p>
+          <div class="loadline" aria-hidden="true"><i></i></div>
+          <button class="quiet-button" id="skip-intro">SKIP INTRO</button>
+        </div>
       </section>
 
-      <section class="menu-screen" id="menu-screen" aria-label="DliKarts main menu" hidden>
-        <picture class="cover-art menu-art" aria-hidden="true"><source media="(max-width: 760px) and (orientation: landscape)" srcset="../assets/landing/dlicom-racers-mobile.webp" /><img src="../assets/landing/dlicom-racers-desktop.webp" alt="" /></picture>
+      <section class="menu-screen" id="menu-screen" aria-label="Dlicom Racers main menu" hidden>
+        <picture class="cover-art menu-art" aria-hidden="true"><source media="(max-width: 760px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape)" srcset="../assets/landing/dlicom-racers-mobile.webp" /><img src="../assets/landing/dlicom-racers-desktop.webp" alt="" /></picture>
         <div class="menu-wash" aria-hidden="true"></div><div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
-        <header class="topbar">
-          <a class="wordmark" href="./" aria-label="DliKarts home"><img src="../assets/environment/branding/dlicom-logo-cutout.png" alt="" /><span class="wordmark-dli">DLI</span><span class="wordmark-karts">KARTS</span></a>
-          <button class="icon-button" id="open-settings" aria-label="Open settings">⚙</button>
-        </header>
-
-        <div class="menu-layout">
-          <div class="hero-copy">
-            <p class="eyebrow">DLICOM CITY CIRCUIT / SEASON ZERO</p>
-            <h2>RACE THE<br /><em>CITY.</em></h2>
-            <p class="hero-description">Pick your driver, hit the circuit, and make every corner count.</p>
-            <div class="menu-actions" aria-label="Main actions">
-              <button class="primary-button" id="open-racers">PLAY <span>→</span></button>
-              <button class="secondary-button" id="open-howto">HOW TO RACE</button>
-              <button class="secondary-button" id="open-settings-copy">SETTINGS</button>
-            </div>
+        <div class="menu-frame screen-frame">
+          <p class="main-menu-label">MAIN MENU</p>
+          <div class="racer-title-lockup" aria-label="Dlicom Racers">
+            <div class="racer-title-top"><span>DLICOM</span><img src="../assets/environment/branding/dlicom-logo-cutout.png" alt="" /></div>
+            <div class="racer-title-bottom">RACERS</div>
           </div>
-
+          <nav class="menu-rail" aria-label="Main menu actions">
+            <button class="rail-button rail-settings" id="open-settings-copy" type="button"><b aria-hidden="true">⚙</b><span>SETTINGS</span></button>
+            <button class="rail-button rail-jam" id="open-game-jam" type="button"><b aria-hidden="true">★</b><span>GAME JAM</span></button>
+            <button class="rail-button rail-socials" id="open-socials" type="button"><b aria-hidden="true">◎</b><span>DLICOM<br />SOCIALS</span></button>
+          </nav>
+          <button class="play-launch" id="open-racers" type="button"><span>PLAY</span><i aria-hidden="true">→</i></button>
+          <footer><span>© DLICOM RACERS</span><span>BEST PLAYED IN LANDSCAPE ON MOBILE</span></footer>
         </div>
-
-        <footer><span>© DLIKARTS / DLICOM CITY</span><span>BEST PLAYED IN LANDSCAPE ON MOBILE</span><a href="../prototype/">ASSET VIEWER</a></footer>
       </section>
 
       <section class="panel racers-panel" id="racers-panel" aria-labelledby="racer-title" hidden>
-        <div class="panel-heading"><div><p class="eyebrow">CHOOSE YOUR DRIVER</p><h2 id="racer-title">PICK A <em>RACER</em></h2></div><button class="close-button" data-close aria-label="Close racer selection">×</button></div>
-        <div class="racer-grid">
+        <div class="panel-frame screen-frame">
+          <div class="panel-heading"><div><p class="eyebrow">CHOOSE YOUR DRIVER</p><h2 id="racer-title">PICK A <em>RACER</em></h2></div><button class="close-button" data-close aria-label="Close racer selection">×</button></div>
+          <div class="racer-grid">
           <button class="racer-card selected" data-racer="guatam" aria-pressed="true"><span class="driver-number">01</span><img src="../references/Guatam/Guatam.png" alt="Guatam" /><strong>GUATAM</strong><small>BALANCED / AVAILABLE</small></button>
           <div class="racer-card locked"><span class="driver-number">02</span><strong>JUST SAM</strong><small>RACER INCOMING</small></div>
           <div class="racer-card locked"><span class="driver-number">03</span><strong>KAPURIYA</strong><small>RACER INCOMING</small></div>
           <div class="racer-card locked"><span class="driver-number">04</span><strong>QUANG</strong><small>RACER INCOMING</small></div>
           <div class="racer-card locked"><span class="driver-number">05</span><strong>RETREE</strong><small>RACER INCOMING</small></div>
           <div class="racer-card locked"><span class="driver-number">06</span><strong>TIMUR</strong><small>RACER INCOMING</small></div>
+          </div>
+          <div class="selection-footer"><p id="selection-message">GUATAM IS READY TO RACE.</p><button class="primary-button" id="launch-game">RACE AS GUATAM <span>→</span></button></div>
         </div>
-        <div class="selection-footer"><p id="selection-message">GUATAM IS READY TO RACE.</p><button class="primary-button" id="launch-game">RACE AS GUATAM <span>→</span></button></div>
       </section>
 
       <section class="panel info-panel" id="howto-panel" aria-labelledby="howto-title" hidden>
-        <div class="panel-heading"><div><p class="eyebrow">DRIVER BRIEFING</p><h2 id="howto-title">HOW TO <em>RACE</em></h2></div><button class="close-button" data-close aria-label="Close instructions">×</button></div>
-        <div class="howto-grid"><article><b>01</b><h3>KEEP MOVING</h3><p>Use W / ↑ to accelerate. S / ↓ brakes and reverses.</p></article><article><b>02</b><h3>DRIFT SMART</h3><p>Hold Space while steering through a corner, then release for a boost.</p></article><article><b>03</b><h3>USE ITEMS</h3><p>Collect track pickups and press E to activate your current item.</p></article><article><b>04</b><h3>STAY ON TRACK</h3><p>Off-road surfaces slow you down. Press R if you need a recovery.</p></article></div>
-        <p class="touch-note">ON MOBILE: HOLD ACCEL TO DRIVE. USE LEFT, RIGHT, DRIFT, BRAKE / REVERSE, AND ITEM WHEN NEEDED.</p>
+        <div class="panel-frame screen-frame">
+          <div class="panel-heading"><div><p class="eyebrow">DRIVER BRIEFING</p><h2 id="howto-title">HOW TO <em>RACE</em></h2></div><button class="close-button" data-close aria-label="Close instructions">×</button></div>
+          <div class="howto-grid"><article><b>01</b><h3>KEEP MOVING</h3><p>Use W / ↑ to accelerate. S / ↓ brakes and reverses.</p></article><article><b>02</b><h3>DRIFT SMART</h3><p>Hold Space while steering through a corner, then release for a boost.</p></article><article><b>03</b><h3>USE ITEMS</h3><p>Collect track pickups and press E to activate your current item.</p></article><article><b>04</b><h3>STAY ON TRACK</h3><p>Off-road surfaces slow you down. Press R if you need a recovery.</p></article></div>
+          <p class="touch-note">ON MOBILE: HOLD ACCEL TO DRIVE. USE LEFT, RIGHT, DRIFT, BRAKE / REVERSE, AND ITEM WHEN NEEDED.</p>
+        </div>
       </section>
 
       <section class="panel settings-panel" id="settings-panel" aria-labelledby="settings-title" hidden>
-        <div class="panel-heading"><div><p class="eyebrow">PIT GARAGE</p><h2 id="settings-title">RACE <em>SETTINGS</em></h2></div><button class="close-button" data-close aria-label="Close settings">×</button></div>
-        <div class="settings-list"><label><span>MASTER</span><input type="range" id="master-volume" min="0" max="100" value="90" /><output for="master-volume">90%</output></label><label><span>MUSIC</span><input type="range" id="music-volume" min="0" max="100" value="70" /><output for="music-volume">70%</output></label><label><span>SFX</span><input type="range" id="sfx-volume" min="0" max="100" value="80" /><output for="sfx-volume">80%</output></label><button class="secondary-button" id="audio-mute" type="button">MUTE</button><label><span>QUALITY</span><select id="quality-choice"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label><span>CONTROL</span><select id="control-choice"><option value="buttons">STEERING BUTTONS</option><option value="screen">SIDE TOUCH STEERING</option></select></label></div>
-        <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO UNLOCKS AFTER YOUR FIRST TAP OR CLICK.</p>
+        <div class="panel-frame screen-frame">
+          <div class="panel-heading"><div><p class="eyebrow">PIT GARAGE</p><h2 id="settings-title">RACE <em>SETTINGS</em></h2></div><button class="close-button" data-close aria-label="Close settings">×</button></div>
+          <div class="settings-list"><label><span>MASTER</span><input type="range" id="master-volume" min="0" max="100" value="90" /><output for="master-volume">90%</output></label><label><span>MUSIC</span><input type="range" id="music-volume" min="0" max="100" value="70" /><output for="music-volume">70%</output></label><label><span>SFX</span><input type="range" id="sfx-volume" min="0" max="100" value="80" /><output for="sfx-volume">80%</output></label><button class="secondary-button" id="audio-mute" type="button">MUTE</button><label><span>QUALITY</span><select id="quality-choice"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label><span>CONTROL</span><select id="control-choice"><option value="buttons">STEERING BUTTONS</option><option value="screen">SIDE TOUCH STEERING</option></select></label></div>
+          <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO UNLOCKS AFTER YOUR FIRST TAP OR CLICK.</p>
+        </div>
       </section>
     </main>
-    <script type="module" src="./menu.js?v=dlicom-landing-1"></script>
+    <script type="module" src="./menu.js?v=dlicom-menu-4"></script>
   </body>
 </html>

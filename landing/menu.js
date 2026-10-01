@@ -42,7 +42,7 @@ if (requestedPanel === 'settings') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
 } else window.setTimeout(revealMenu, 2100);
 document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('racers-panel'); });
-document.querySelector('#open-howto').addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('howto-panel'); });
+document.querySelector('#open-howto')?.addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('howto-panel'); });
 document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('settings-panel'); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
 document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
