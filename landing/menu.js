@@ -6,7 +6,7 @@ audio.playMusic('menu');
 const splash = document.querySelector('#splash');
 const menu = document.querySelector('#menu-screen');
 const panels = [...document.querySelectorAll('.panel')];
-const settings = { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), mute: document.querySelector('#audio-mute'), quality: document.querySelector('#quality-choice'), controls: document.querySelector('#control-choice') };
+const settings = { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), quality: document.querySelector('#quality-choice'), controls: document.querySelector('#control-choice') };
 const requestedPanel = new URLSearchParams(location.search).get('panel');
 const requestedView = new URLSearchParams(location.search).get('view');
 const returnToRace = new URLSearchParams(location.search).get('return') === 'game';
@@ -54,7 +54,6 @@ document.addEventListener('keydown', event => { if (event.key === 'Escape') clos
 settings.master.addEventListener('input', () => { syncOutput(settings.master); audio.setMasterVolume(Number(settings.master.value) / 100); playSelect(); });
 settings.music.addEventListener('input', () => { syncOutput(settings.music); audio.setMusicVolume(Number(settings.music.value) / 100); persistSetting('music', settings.music.value); });
 settings.sfx.addEventListener('input', () => { syncOutput(settings.sfx); audio.setSfxVolume(Number(settings.sfx.value) / 100); persistSetting('sfx', settings.sfx.value); });
-settings.mute.addEventListener('click', async () => { await audio.unlock(); audio.setMuted(); settings.mute.textContent = audio.settings.muted ? 'UNMUTE' : 'MUTE'; if (!audio.settings.muted) playSelect(); });
 settings.quality.addEventListener('change', () => persistSetting('quality', settings.quality.value));
 settings.controls.addEventListener('change', () => persistSetting('controls', settings.controls.value));
-settings.master.value = Math.round(audio.settings.master * 100); settings.music.value = Math.round(audio.settings.music * 100); settings.sfx.value = Math.round(audio.settings.sfx * 100); syncOutput(settings.master); syncOutput(settings.music); syncOutput(settings.sfx); settings.mute.textContent = audio.settings.muted ? 'UNMUTE' : 'MUTE'; settings.quality.value = localStorage.getItem('dlikarts.quality') ?? 'auto'; settings.controls.value = localStorage.getItem('dlikarts.controls') === 'screen' ? 'screen' : 'buttons';
+settings.master.value = Math.round(audio.settings.master * 100); settings.music.value = Math.round(audio.settings.music * 100); settings.sfx.value = Math.round(audio.settings.sfx * 100); syncOutput(settings.master); syncOutput(settings.music); syncOutput(settings.sfx); settings.quality.value = localStorage.getItem('dlikarts.quality') ?? 'auto'; settings.controls.value = localStorage.getItem('dlikarts.controls') === 'screen' ? 'screen' : 'buttons';

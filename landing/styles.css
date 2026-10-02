@@ -204,6 +204,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .racer-card:hover{transform:translateY(-3px);border-color:var(--dli-cyan);background:linear-gradient(160deg,rgba(21,83,151,.8),rgba(4,18,44,.9))}
 .racer-card.selected{border-color:var(--dli-cyan);box-shadow:inset 0 0 0 1px rgba(113,239,255,.36)}
 .racer-card.selected:after{background:linear-gradient(0deg,rgba(23,116,255,.32),transparent 60%)}
+.racer-card.selected img{inset:0;width:100%;height:100%;object-fit:cover;object-position:center 44%;opacity:.88;filter:contrast(1.04) saturate(.96)}
 .driver-number{color:var(--dli-cyan)}
 .racer-card small{color:var(--dli-cyan)}
 .locked{background:linear-gradient(135deg,rgba(9,28,54,.68),rgba(4,14,32,.9));opacity:.68}
@@ -218,7 +219,6 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .settings-list input{accent-color:var(--dli-blue)}
 .settings-list select{border-color:var(--surface-line);background:rgba(7,27,62,.82);color:var(--dli-cream)}
 .settings-list output,.selection-footer p,.touch-note{color:var(--dli-cyan)}
-.settings-list #audio-mute{border-color:var(--surface-line);background:rgba(7,27,62,.82);color:var(--dli-cream)}
 
 /* Arcade-menu composition: title lockup, left action rail, and Play at the finish line. */
 .splash{background:radial-gradient(circle at 74% 22%,rgba(68,255,227,.22),transparent 33%),linear-gradient(135deg,#1733b8 0%,#316fff 46%,#3b4cff 100%)}
@@ -252,7 +252,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .racer-title-lockup{top:clamp(14px,4vh,48px);left:50%;min-width:0;transform:translateX(-50%);font:900 italic clamp(78px,12.8vw,184px)/.73 "Barlow Condensed",sans-serif;letter-spacing:.018em;text-align:center}
 .racer-title-top{justify-content:center;gap:.12em;transform:none;color:#fff}
 .racer-title-top span{background:none;color:#fff}
-.racer-title-top img{width:.88em;height:.88em}
+.racer-title-top img{width:.73em;height:.73em;flex:0 0 .73em}
 .racer-title-bottom{margin-top:clamp(9px,1.2vw,18px);padding:0;transform:none;background:none;color:#fff;letter-spacing:.015em}
 .menu-rail{position:fixed;top:auto;bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px));left:max(18px,calc(env(safe-area-inset-left) + 16px));width:clamp(190px,23vw,318px)}
 .play-launch{position:fixed;right:max(18px,calc(env(safe-area-inset-right) + 16px));bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px))}

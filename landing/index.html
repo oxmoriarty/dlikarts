@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#020817" />
     <link rel="manifest" href="../manifest.webmanifest" />
     <title>Dlicom Racers — Race. Play. Repeat.</title>
-    <link rel="stylesheet" href="./styles.css?v=dlicom-menu-8" />
+    <link rel="stylesheet" href="./styles.css?v=dlicom-menu-10" />
     <link rel="stylesheet" href="./responsive.css" />
-    <link rel="stylesheet" href="./mobile.css?v=dlicom-menu-8" />
+    <link rel="stylesheet" href="./mobile.css?v=dlicom-menu-10" />
     <script>
       // Run before body content paints, preventing a landing-screen flash when
       // the player intentionally goes straight to settings or the menu.
@@ -52,7 +52,7 @@
         <div class="panel-frame screen-frame">
           <div class="panel-heading"><div><p class="eyebrow">CHOOSE YOUR DRIVER</p><h2 id="racer-title">PICK A <em>RACER</em></h2></div><button class="close-button" data-close aria-label="Close racer selection">×</button></div>
           <div class="racer-grid">
-          <button class="racer-card selected" data-racer="guatam" aria-pressed="true"><span class="driver-number">01</span><img src="../references/Guatam/Guatam.png" alt="Guatam" /><strong>GUATAM</strong><small>BALANCED / AVAILABLE</small></button>
+          <button class="racer-card selected" data-racer="guatam" aria-pressed="true"><span class="driver-number">01</span><img src="../assets/characters/guatam-card.png" alt="Guatam beside his kart" /><strong>GUATAM</strong><small>BALANCED / AVAILABLE</small></button>
           <div class="racer-card locked"><span class="driver-number">02</span><strong>JUST SAM</strong><small>RACER INCOMING</small></div>
           <div class="racer-card locked"><span class="driver-number">03</span><strong>KAPURIYA</strong><small>RACER INCOMING</small></div>
           <div class="racer-card locked"><span class="driver-number">04</span><strong>QUANG</strong><small>RACER INCOMING</small></div>
@@ -74,11 +74,11 @@
       <section class="panel settings-panel" id="settings-panel" aria-labelledby="settings-title" hidden>
         <div class="panel-frame screen-frame">
           <div class="panel-heading"><div><p class="eyebrow">PIT GARAGE</p><h2 id="settings-title">RACE <em>SETTINGS</em></h2></div><button class="close-button" data-close aria-label="Close settings">×</button></div>
-          <div class="settings-list"><label><span>MASTER</span><input type="range" id="master-volume" min="0" max="100" value="90" /><output for="master-volume">90%</output></label><label><span>MUSIC</span><input type="range" id="music-volume" min="0" max="100" value="70" /><output for="music-volume">70%</output></label><label><span>SFX</span><input type="range" id="sfx-volume" min="0" max="100" value="80" /><output for="sfx-volume">80%</output></label><button class="secondary-button" id="audio-mute" type="button">MUTE</button><label><span>QUALITY</span><select id="quality-choice"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label><span>CONTROL</span><select id="control-choice"><option value="buttons">STEERING BUTTONS</option><option value="screen">SIDE TOUCH STEERING</option></select></label></div>
+          <div class="settings-list"><label><span>MASTER</span><input type="range" id="master-volume" min="0" max="100" value="90" /><output for="master-volume">90%</output></label><label><span>MUSIC</span><input type="range" id="music-volume" min="0" max="100" value="70" /><output for="music-volume">70%</output></label><label><span>SFX</span><input type="range" id="sfx-volume" min="0" max="100" value="80" /><output for="sfx-volume">80%</output></label><label><span>QUALITY</span><select id="quality-choice"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label><span>CONTROL</span><select id="control-choice"><option value="buttons">STEERING BUTTONS</option><option value="screen">SIDE TOUCH STEERING</option></select></label></div>
           <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO UNLOCKS AFTER YOUR FIRST TAP OR CLICK.</p>
         </div>
       </section>
     </main>
-    <script type="module" src="./menu.js?v=dlicom-menu-8"></script>
+    <script type="module" src="./menu.js?v=dlicom-menu-10"></script>
   </body>
 </html>
