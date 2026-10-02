@@ -249,11 +249,11 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .menu-frame footer{position:absolute;right:0;bottom:0;left:0;display:flex;justify-content:space-between;padding-top:0;border:0;color:rgba(227,244,255,.78);font-size:clamp(6px,.65vw,9px);text-shadow:0 1px 4px #000}
 
 /* Final title and control anchors: one centered mark, clear lower-corner actions. */
-.racer-title-lockup{top:clamp(14px,4vh,48px);left:50%;min-width:0;transform:translateX(-50%);font:900 italic clamp(78px,12.8vw,184px)/.73 "Barlow Condensed",sans-serif;letter-spacing:.018em;text-align:center}
+.racer-title-lockup{top:clamp(14px,4vh,48px);left:50%;min-width:0;transform:translateX(-50%);font:900 clamp(58px,12vw,170px)/.76 "Barlow Condensed",sans-serif;letter-spacing:.018em;text-align:center}
 .racer-title-top{justify-content:center;gap:.12em;transform:none;color:#fff}
 .racer-title-top span{background:none;color:#fff}
 .racer-title-top img{width:.73em;height:.73em;flex:0 0 .73em}
-.racer-title-bottom{margin-top:clamp(9px,1.2vw,18px);padding:0;transform:none;background:none;color:#fff;letter-spacing:.015em}
+.racer-title-bottom{margin-top:clamp(9px,1.2vw,18px);padding:0;transform:none;background:none;color:#fff;font-style:normal;letter-spacing:.015em}
 .menu-rail{position:fixed;top:auto;bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px));left:max(18px,calc(env(safe-area-inset-left) + 16px));width:clamp(190px,23vw,318px)}
 .play-launch{position:fixed;right:max(18px,calc(env(safe-area-inset-right) + 16px));bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px))}
 .menu-frame footer{display:none}

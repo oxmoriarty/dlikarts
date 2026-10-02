@@ -5,12 +5,20 @@ export class UI {
   }
   bindAudio(audio) {
     this.audio = audio;
-    const controls = { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume'), mute: document.querySelector('#audio-mute') };
-    if (!controls.master) return;
-    controls.master.value = Math.round(audio.settings.master * 100); controls.music.value = Math.round(audio.settings.music * 100); controls.sfx.value = Math.round(audio.settings.sfx * 100); controls.mute.textContent = audio.settings.muted ? 'UNMUTE' : 'MUTE';
-    const update = (name, setter) => controls[name].addEventListener('input', event => { setter.call(audio, Number(event.target.value) / 100); this.audio?.playSfx('uiSelect', { gain: .22, cooldown: 70 }); });
-    update('master', audio.setMasterVolume); update('music', audio.setMusicVolume); update('sfx', audio.setSfxVolume);
-    controls.mute.addEventListener('click', async () => { await audio.unlock(); audio.setMuted(); controls.mute.textContent = audio.settings.muted ? 'UNMUTE' : 'MUTE'; if (!audio.settings.muted) audio.playSfx('uiSelect', { gain: .3 }); });
+    const groups = [
+      { master: document.querySelector('#master-volume'), music: document.querySelector('#music-volume'), sfx: document.querySelector('#sfx-volume') },
+      { master: document.querySelector('#race-master-volume'), music: document.querySelector('#race-music-volume'), sfx: document.querySelector('#race-sfx-volume') },
+    ].filter(group => group.master && group.music && group.sfx);
+    if (!groups.length) return;
+    const sync = () => groups.forEach(group => Object.entries({ master: audio.settings.master, music: audio.settings.music, sfx: audio.settings.sfx }).forEach(([name, value]) => {
+      group[name].value = Math.round(value * 100);
+      const output = document.querySelector(`output[for="${group[name].id}"]`);
+      if (output) output.textContent = `${group[name].value}%`;
+    }));
+    const update = (name, setter) => groups.forEach(group => group[name].addEventListener('input', async event => {
+      await audio.unlock(); setter.call(audio, Number(event.target.value) / 100); sync(); this.audio?.playSfx('uiSelect', { gain: .22, cooldown: 70 });
+    }));
+    sync(); update('master', audio.setMasterVolume); update('music', audio.setMusicVolume); update('sfx', audio.setSfxVolume);
   }
   hideLoading() { this.loading.classList.add('gone'); }
   updateTouchItem(item) {

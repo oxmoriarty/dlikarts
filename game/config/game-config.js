@@ -96,6 +96,10 @@ export const QUALITY_PROFILES = Object.freeze({
 });
 
 export function chooseQuality() {
+  try {
+    const preferred = localStorage.getItem('dlikarts.quality');
+    if (preferred && preferred !== 'auto' && QUALITY_PROFILES[preferred]) return preferred;
+  } catch { /* Storage may be unavailable. */ }
   const mobile = matchMedia('(pointer: coarse)').matches;
   if (mobile && devicePixelRatio > 2) return 'medium';
   return mobile ? 'medium' : 'high';

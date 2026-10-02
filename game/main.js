@@ -30,6 +30,11 @@ const sun = new THREE.DirectionalLight(0xffe2b8, 3.0); sun.position.set(18, 32, 
 const fill = new THREE.DirectionalLight(0x4f9ee8, 1.2); fill.position.set(-22, 12, 18); scene.add(fill);
 const loader = new GLTFLoader();
 const input = new InputState(); const keyboardInput = new KeyboardInput(input); const touchInput = new TouchControls(input);
+const pausePanel = document.querySelector('#pause-panel');
+const raceSettingsPanel = document.querySelector('#race-settings-panel');
+const raceSettingsClose = document.querySelector('#close-race-settings');
+const raceQualityChoice = document.querySelector('#race-quality-choice');
+const raceControlChoice = document.querySelector('#race-control-choice');
 const autoplaySmokeTest = new URLSearchParams(location.search).has('autoplay');
 const previewFinish = new URLSearchParams(location.search).has('previewFinish');
 let game = null; let city = null; let frameSamples = []; let lastRender = performance.now(); let qualityProfile;
@@ -77,24 +82,57 @@ function createGame(characterGltf, kartGltf) {
   return { track, racers, player: racers[0], playerAI: new RacingLineAI(racers[0], track, 0), race, powerups, cameraTarget: new THREE.Vector3(), cameraPosition: new THREE.Vector3(), clock: 0 };
 }
 
-function setRacePaused(paused) {
+function setRacePaused(paused, { showPausePanel = true } = {}) {
   if (!game || game.race.state === 'RESULTS') return;
   game.paused = paused;
   input.clear();
   audio.setGameplayPaused(paused);
-  document.querySelector('#pause-panel').hidden = !paused;
+  pausePanel.hidden = !paused || !showPausePanel;
   const button = document.querySelector('#pause-race');
   button.setAttribute('aria-label', paused ? 'Resume race' : 'Pause race');
   button.setAttribute('aria-pressed', String(paused));
 }
 
+function savedSetting(key, fallback) {
+  try { return localStorage.getItem(`dlikarts.${key}`) ?? fallback; } catch { return fallback; }
+}
+
+function syncRaceSettings() {
+  raceQualityChoice.value = savedSetting('quality', 'auto');
+  raceControlChoice.value = touchInput.controlMode;
+}
+
+function closeRaceSettings({ playSound = true } = {}) {
+  if (raceSettingsPanel.hidden) return;
+  raceSettingsPanel.hidden = true;
+  setRacePaused(false);
+  if (playSound) audio.playSfx('uiBack', { gain: .34, cooldown: 90 });
+}
+
 document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); void requestMobilePresentation(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
-document.querySelector('#pause-race').addEventListener('click', async () => { await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
+document.querySelector('#pause-race').addEventListener('click', async () => { if (!raceSettingsPanel.hidden) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
 document.querySelector('#resume-race').addEventListener('click', async () => { await audio.unlock(); setRacePaused(false); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); });
-// Direct routes paint their intended menu view immediately, so neither action
-// exposes the landing/loading splash between race screens.
-document.querySelector('#open-race-settings').addEventListener('click', () => { if (!game) return; setRacePaused(true); location.href = '../landing/?panel=settings&return=game'; });
-document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/?view=menu'; });
+document.querySelector('#open-race-settings').addEventListener('click', async () => {
+  if (!game || game.race.state === 'RESULTS') return;
+  await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 });
+  syncRaceSettings(); setRacePaused(true, { showPausePanel: false });
+  raceSettingsPanel.hidden = false; raceSettingsClose.focus();
+});
+raceSettingsClose.addEventListener('click', () => closeRaceSettings());
+raceQualityChoice.addEventListener('change', () => {
+  try { localStorage.setItem('dlikarts.quality', raceQualityChoice.value); } catch { /* Storage may be unavailable. */ }
+  const quality = raceQualityChoice.value === 'auto' ? chooseQuality() : raceQualityChoice.value;
+  applyQuality(quality); document.querySelector('#quality').value = quality;
+  audio.playSfx('uiSelect', { gain: .28, cooldown: 70 });
+});
+raceControlChoice.addEventListener('change', () => {
+  touchInput.setControlMode(raceControlChoice.value);
+  audio.playSfx('uiSelect', { gain: .28, cooldown: 70 });
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !raceSettingsPanel.hidden) { event.preventDefault(); closeRaceSettings(); }
+});
+document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/'; });
 
 function resolveKartCollisions(racers) {
   for (let i = 0; i < racers.length; i += 1) for (let j = i + 1; j < racers.length; j += 1) {

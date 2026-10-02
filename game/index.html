@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#07101b" />
     <link rel="manifest" href="../manifest.webmanifest" />
     <title>DliKarts — Switchback Yard</title>
-    <link rel="stylesheet" href="./styles.css?v=touch-control-modes-2" />
+    <link rel="stylesheet" href="./styles.css?v=in-race-settings-1" />
     <link rel="stylesheet" href="./mobile.css?v=mobile-controls-responsive-5" />
   </head>
   <body>
@@ -19,7 +19,7 @@
       <p class="eyebrow">VERTICAL SLICE / SWITCHBACK YARD</p><h1>READY TO<br><em>RACE?</em></h1><p class="copy">Guatam versus four test pilots.<br>Three laps. Drift for boost.</p>
       <button id="start-race">START RACE</button><p class="keys">WASD / ARROWS · SPACE DRIFT · E ITEM · R RECOVER</p>
       <label class="quality">QUALITY <select id="quality"><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label>
-      <div class="audio-settings" aria-label="Audio settings"><label>MASTER <input id="master-volume" type="range" min="0" max="100" value="90" /></label><label>MUSIC <input id="music-volume" type="range" min="0" max="100" value="70" /></label><label>SFX <input id="sfx-volume" type="range" min="0" max="100" value="80" /></label><button id="audio-mute" type="button">MUTE</button></div>
+      <div class="audio-settings" aria-label="Audio settings"><label>MASTER <input id="master-volume" type="range" min="0" max="100" value="90" /></label><label>MUSIC <input id="music-volume" type="range" min="0" max="100" value="70" /></label><label>SFX <input id="sfx-volume" type="range" min="0" max="100" value="80" /></label></div>
     </section>
     <div id="hud" aria-live="polite"><div class="hud-top"><strong id="position">1ST / 5</strong><span id="lap">LAP 1 / 3</span><time id="time">0:00.00</time></div><div id="lap-banner" role="status"></div><div id="countdown"></div><div id="warning"></div><div class="hud-bottom"><div class="item"><small>ITEM</small><b id="item">—</b></div><div class="drift"><small>DRIFT</small><b id="drift">READY</b></div><pre id="debug" aria-hidden="true"></pre></div></div>
     <nav id="race-actions" aria-label="Race controls">
@@ -28,10 +28,23 @@
       <button id="exit-race" class="race-tool exit-tool" type="button" aria-label="Exit race" title="Exit race"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4H5v16h8" /><path d="m14 8 4 4-4 4M9 12h9" /></svg></button>
     </nav>
     <section id="pause-panel" class="pause-panel" aria-label="Race paused" hidden><p class="eyebrow">RACE PAUSED</p><h2>TAKE A <em>BREATHER</em></h2><button id="resume-race" type="button">RESUME RACE</button></section>
+    <section id="race-settings-panel" class="pause-panel race-settings-panel" aria-labelledby="race-settings-title" aria-modal="true" hidden>
+      <div class="race-settings-card">
+        <header class="race-settings-heading"><div><p class="eyebrow">PIT GARAGE</p><h2 id="race-settings-title">RACE <em>SETTINGS</em></h2></div><button id="close-race-settings" class="race-settings-close" type="button" aria-label="Close settings and resume race">×</button></header>
+        <div class="race-settings-list">
+          <label><span>MASTER</span><input id="race-master-volume" type="range" min="0" max="100" value="90" /><output for="race-master-volume">90%</output></label>
+          <label><span>MUSIC</span><input id="race-music-volume" type="range" min="0" max="100" value="70" /><output for="race-music-volume">70%</output></label>
+          <label><span>SFX</span><input id="race-sfx-volume" type="range" min="0" max="100" value="80" /><output for="race-sfx-volume">80%</output></label>
+          <label><span>QUALITY</span><select id="race-quality-choice"><option value="auto">AUTO</option><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label>
+          <label><span>CONTROL</span><select id="race-control-choice"><option value="buttons">STEERING BUTTONS</option><option value="screen">SIDE TOUCH STEERING</option></select></label>
+        </div>
+        <p class="race-settings-note">CLOSE SETTINGS TO CONTINUE THIS RACE.</p>
+      </div>
+    </section>
     <div id="rotate" class="screen rotate"><div>↻</div><strong>ROTATE YOUR DEVICE</strong><small>DliKarts races best in landscape.</small></div>
     <section id="results" class="screen results" aria-label="Race results"><p class="eyebrow">RACE COMPLETE</p><h2 id="result-place">1ST PLACE</h2><dl><div><dt>RACE TIME</dt><dd id="result-time">0:00.00</dd></div><div><dt>BEST LAP</dt><dd id="result-best">0:00.00</dd></div></dl><button id="retry">RACE AGAIN</button></section>
     <div id="touch-controls" aria-label="Touch racing controls"><div class="touch-left"><button data-touch="left" class="touch-icon steer-left" aria-label="Steer left"><img src="../assets/ui/mobile-controls/left.svg" alt="" /></button><button data-touch="right" class="touch-icon steer-right" aria-label="Steer right"><img src="../assets/ui/mobile-controls/right.svg" alt="" /></button></div><div class="touch-right"><button id="touch-item" data-touch="item" class="touch-icon item-control empty" aria-label="No power-up available" aria-disabled="true"></button><button data-touch="drift" class="touch-icon drift-control" aria-label="Drift"><img src="../assets/ui/mobile-controls/drift.svg" alt="" /></button><button data-touch="recover" class="touch-icon recover" aria-label="Recover kart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8V4m0 0h4M5 4a8 8 0 1 1-1 11" /><path d="M12 8v5l3 2" /></svg></button><button data-touch="brake" class="touch-icon brake" aria-label="Brake or reverse"><img src="../assets/ui/mobile-controls/brake.svg" alt="" /></button><button data-touch="accelerate" class="touch-icon accelerate" aria-label="Accelerate"><img src="../assets/ui/mobile-controls/acceleration.svg" alt="" /></button></div></div>
     <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.1/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.1/examples/jsm/"}}</script>
-    <script type="module" src="./main.js?v=battle-pod-2"></script>
+    <script type="module" src="./main.js?v=in-race-settings-1"></script>
   </body>
 </html>

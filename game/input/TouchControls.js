@@ -22,6 +22,12 @@ export class TouchControls {
     addEventListener('visibilitychange', () => { if (document.hidden) { this.held.clear(); this.screenSteerPointers.clear(); } });
   }
   loadControlMode() { try { return localStorage.getItem('dlikarts.controls') === 'screen' ? 'screen' : 'buttons'; } catch { return 'buttons'; } }
+  setControlMode(mode) {
+    this.controlMode = mode === 'screen' ? 'screen' : 'buttons';
+    this.held.clear(); this.screenSteerPointers.clear();
+    document.body.dataset.touchSteering = this.controlMode;
+    try { localStorage.setItem('dlikarts.controls', this.controlMode); } catch { /* Storage may be unavailable. */ }
+  }
   isTouchLayout() { return matchMedia('(pointer: coarse)').matches || innerWidth <= 760; }
   update() {
     const h = this.held; const touchLayout = this.isTouchLayout();
