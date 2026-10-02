@@ -9,9 +9,9 @@
     <meta name="theme-color" content="#020817" />
     <link rel="manifest" href="../manifest.webmanifest" />
     <title>Dlicom Racers — Race. Play. Repeat.</title>
-    <link rel="stylesheet" href="./styles.css?v=dlicom-menu-4" />
+    <link rel="stylesheet" href="./styles.css?v=dlicom-menu-8" />
     <link rel="stylesheet" href="./responsive.css" />
-    <link rel="stylesheet" href="./mobile.css?v=dlicom-menu-4" />
+    <link rel="stylesheet" href="./mobile.css?v=dlicom-menu-8" />
     <script>
       // Run before body content paints, preventing a landing-screen flash when
       // the player intentionally goes straight to settings or the menu.
@@ -23,13 +23,10 @@
   <body>
     <main class="garage-shell dlicom-landing">
       <section class="splash" id="splash" aria-label="Loading Dlicom Racers">
-        <div class="splash-track" aria-hidden="true"></div>
         <div class="splash-content screen-frame">
-          <p class="eyebrow">DLICOM RACERS PRESENTS</p>
-          <h1>DLICOM <span>RACERS</span></h1>
+          <h1>DLICOM RACERS</h1>
           <p class="tagline">RACE. PLAY. REPEAT.</p>
           <div class="loadline" aria-hidden="true"><i></i></div>
-          <button class="quiet-button" id="skip-intro">SKIP INTRO</button>
         </div>
       </section>
 
@@ -37,7 +34,6 @@
         <picture class="cover-art menu-art" aria-hidden="true"><source media="(max-width: 760px) and (orientation: landscape), (max-height: 600px) and (orientation: landscape)" srcset="../assets/landing/dlicom-racers-mobile.webp" /><img src="../assets/landing/dlicom-racers-desktop.webp" alt="" /></picture>
         <div class="menu-wash" aria-hidden="true"></div><div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
         <div class="menu-frame screen-frame">
-          <p class="main-menu-label">MAIN MENU</p>
           <div class="racer-title-lockup" aria-label="Dlicom Racers">
             <div class="racer-title-top"><span>DLICOM</span><img src="../assets/environment/branding/dlicom-logo-cutout.png" alt="" /></div>
             <div class="racer-title-bottom">RACERS</div>
@@ -45,7 +41,7 @@
           <nav class="menu-rail" aria-label="Main menu actions">
             <button class="rail-button rail-settings" id="open-settings-copy" type="button"><b aria-hidden="true">⚙</b><span>SETTINGS</span></button>
             <button class="rail-button rail-jam" id="open-game-jam" type="button"><b aria-hidden="true">★</b><span>GAME JAM</span></button>
-            <button class="rail-button rail-socials" id="open-socials" type="button"><b aria-hidden="true">◎</b><span>DLICOM<br />SOCIALS</span></button>
+            <button class="rail-button rail-socials" id="open-socials" type="button"><b aria-hidden="true">◎</b><span>DLICOM</span></button>
           </nav>
           <button class="play-launch" id="open-racers" type="button"><span>PLAY</span><i aria-hidden="true">→</i></button>
           <footer><span>© DLICOM RACERS</span><span>BEST PLAYED IN LANDSCAPE ON MOBILE</span></footer>
@@ -83,6 +79,6 @@
         </div>
       </section>
     </main>
-    <script type="module" src="./menu.js?v=dlicom-menu-4"></script>
+    <script type="module" src="./menu.js?v=dlicom-menu-8"></script>
   </body>
 </html>

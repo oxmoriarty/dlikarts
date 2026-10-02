@@ -34,7 +34,7 @@ function persistSetting(key, value) { localStorage.setItem(`dlikarts.${key}`, va
 function loadSetting(key, input, fallback) { const value = localStorage.getItem(`dlikarts.${key}`) ?? fallback; input.value = value; syncOutput(input); }
 function syncOutput(input) { const output = document.querySelector(`output[for="${input.id}"]`); if (output) output.textContent = `${input.value}%`; }
 
-document.querySelector('#skip-intro').addEventListener('click', async () => { await audio.unlock(); playSelect(); void requestMobilePresentation(); revealMenu(); });
+document.querySelector('#skip-intro')?.addEventListener('click', async () => { await audio.unlock(); playSelect(); void requestMobilePresentation(); revealMenu(); });
 if (requestedPanel === 'settings') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
   requestAnimationFrame(() => openPanel('settings-panel'));

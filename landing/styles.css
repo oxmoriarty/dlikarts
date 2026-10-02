@@ -221,22 +221,21 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .settings-list #audio-mute{border-color:var(--surface-line);background:rgba(7,27,62,.82);color:var(--dli-cream)}
 
 /* Arcade-menu composition: title lockup, left action rail, and Play at the finish line. */
-.splash{background:radial-gradient(circle at 50% 38%,rgba(22,116,255,.2),transparent 30%),linear-gradient(135deg,#020817 10%,#061838 55%,#020817)}
-.splash-track{width:92vmax;height:10vmax;left:-16vmax;top:22%;border-color:rgba(113,239,255,.28);background:linear-gradient(90deg,transparent 0 26%,rgba(23,116,255,.45) 26% 74%,transparent 74%);opacity:.7}
+.splash{background:radial-gradient(circle at 74% 22%,rgba(68,255,227,.22),transparent 33%),linear-gradient(135deg,#1733b8 0%,#316fff 46%,#3b4cff 100%)}
 .splash-content{height:min(64dvh,580px)}
-.splash h1{max-width:950px;font-size:clamp(58px,12vw,170px);line-height:.76;color:var(--dli-cream)}
-.splash h1 span{color:var(--dli-red)}
-.splash .tagline{letter-spacing:.24em}
+.splash h1{max-width:950px;font-size:clamp(58px,12vw,170px);line-height:.76;color:#fff;text-shadow:0 5px 18px rgba(8,19,105,.3)}
+.splash .tagline{color:#fff;letter-spacing:.24em}
 
 .menu-screen{background:#020817}
 .menu-wash{background:linear-gradient(90deg,rgba(1,7,22,.82) 0%,rgba(1,7,22,.49) 35%,rgba(1,7,22,.12) 64%,rgba(1,7,22,.2) 100%)}
 .menu-frame{display:block;height:min(78dvh,780px);min-height:0}
 .main-menu-label{position:absolute;top:clamp(4px,1.8vh,18px);left:0;margin:0;padding-bottom:8px;border-bottom:3px solid var(--dli-cyan);color:var(--dli-cream);font:900 clamp(16px,2.25vw,31px)/1 "Barlow Condensed",sans-serif;letter-spacing:.08em;text-shadow:0 2px 12px #000}
-.racer-title-lockup{position:absolute;top:clamp(40px,9vh,104px);left:55%;z-index:2;min-width:min(40vw,570px);transform:translateX(-50%) rotate(-2deg);font:900 clamp(54px,8.9vw,134px)/.68 "Barlow Condensed",sans-serif;letter-spacing:-.06em;text-align:left;text-shadow:0 5px 0 rgba(1,7,22,.5),0 12px 28px rgba(0,0,0,.42)}
-.racer-title-top{display:flex;align-items:center;gap:clamp(8px,1.4vw,18px);color:var(--dli-cream);white-space:nowrap}
-.racer-title-top img{width:clamp(40px,6vw,88px);height:clamp(40px,6vw,88px);object-fit:contain;filter:drop-shadow(0 5px 8px rgba(0,0,0,.45))}
-.racer-title-bottom{margin-top:clamp(8px,1vw,15px);padding-left:clamp(16px,2vw,33px);color:var(--dli-red);font-style:italic;letter-spacing:-.075em}
-.menu-rail{position:absolute;z-index:2;top:clamp(142px,29vh,285px);left:0;display:grid;gap:clamp(7px,1.3vh,13px);width:clamp(190px,23vw,318px)}
+.racer-title-lockup{position:absolute;top:clamp(40px,9vh,104px);left:55%;z-index:2;min-width:min(42vw,640px);transform:translateX(-50%);font:900 italic clamp(66px,10.8vw,156px)/.66 "Barlow Condensed",sans-serif;letter-spacing:-.08em;text-align:left;text-shadow:0 5px 0 rgba(1,7,22,.58),0 12px 28px rgba(0,0,0,.45)}
+.racer-title-top{display:flex;align-items:center;gap:.12em;transform:translateX(-.1em);white-space:nowrap}
+.racer-title-top span{background:linear-gradient(105deg,#fff 8%,#44ffe3 48%,#316fff 100%);background-clip:text;-webkit-background-clip:text;color:transparent}
+.racer-title-top img{width:.9em;height:.9em;object-fit:contain;filter:drop-shadow(0 5px 8px rgba(0,0,0,.45)) saturate(1.25)}
+.racer-title-bottom{margin-top:clamp(8px,1vw,15px);padding-left:0;transform:translateX(.13em);background:linear-gradient(105deg,#ffb21d 8%,#e436ff 57%,#fff 105%);background-clip:text;-webkit-background-clip:text;color:transparent;font-style:italic;letter-spacing:-.09em}
+.menu-rail{position:absolute;z-index:2;top:clamp(164px,33vh,318px);left:calc(-1 * clamp(18px,2.2vw,38px));display:grid;gap:clamp(7px,1.3vh,13px);width:clamp(190px,23vw,318px)}
 .rail-button{display:grid;grid-template-columns:clamp(44px,5vw,66px) 1fr;align-items:center;min-height:clamp(49px,6.2vw,75px);padding:0;border:0;color:#061429;font:900 clamp(13px,1.8vw,24px)/.86 "Barlow Condensed",sans-serif;letter-spacing:.035em;text-align:left;clip-path:polygon(0 0,96% 0,100% 50%,96% 100%,0 100%);transition:transform .18s ease,filter .18s ease}
 .rail-button:hover{transform:translateX(6px);filter:brightness(1.15)}
 .rail-button b{display:grid;align-self:stretch;place-items:center;margin-right:clamp(7px,1vw,12px);background:rgba(244,250,255,.94);color:#0b4c9e;font:900 clamp(19px,2.4vw,31px)/1 "IBM Plex Mono",monospace;text-align:center}
@@ -244,7 +243,17 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .rail-jam{background:linear-gradient(100deg,#4ddffc,#1376d9)}
 .rail-socials{background:linear-gradient(100deg,#ff705f,#ed3540);color:#fff}
 .rail-socials b{color:#e33b45}
-.play-launch{position:absolute;z-index:2;right:0;bottom:clamp(20px,4vh,44px);display:flex;align-items:center;gap:clamp(20px,3.6vw,52px);min-width:clamp(160px,20vw,280px);min-height:clamp(60px,7.7vw,94px);padding:0 clamp(18px,2.8vw,38px);border:3px solid var(--dli-cream);background:linear-gradient(105deg,#1bdb82,#1595ef);color:#031a23;font:900 clamp(31px,4.2vw,61px)/1 "Barlow Condensed",sans-serif;font-style:italic;letter-spacing:-.04em;clip-path:polygon(0 12%,100% 0,94% 100%,0 88%);filter:drop-shadow(0 12px 13px rgba(0,0,0,.34));transition:transform .18s ease,filter .18s ease}
+.play-launch{position:absolute;z-index:2;right:calc(-1 * clamp(14px,1.9vw,34px));bottom:clamp(2px,1.3vh,16px);display:flex;align-items:center;gap:clamp(20px,3.6vw,52px);min-width:clamp(160px,20vw,280px);min-height:clamp(60px,7.7vw,94px);padding:0 clamp(18px,2.8vw,38px);border:3px solid var(--dli-cream);background:linear-gradient(105deg,#ffb21d,#44ffe3 54%,#316fff);color:#07152e;font:900 clamp(31px,4.2vw,61px)/1 "Barlow Condensed",sans-serif;font-style:italic;letter-spacing:-.04em;clip-path:polygon(0 12%,100% 0,94% 100%,0 88%);filter:drop-shadow(0 12px 13px rgba(0,0,0,.34));transition:transform .18s ease,filter .18s ease}
 .play-launch:hover{transform:translateY(-4px) rotate(-1deg);filter:drop-shadow(0 16px 16px rgba(0,0,0,.42)) brightness(1.08)}
 .play-launch i{font:900 clamp(22px,3vw,38px)/1 "IBM Plex Mono",monospace;font-style:normal}
 .menu-frame footer{position:absolute;right:0;bottom:0;left:0;display:flex;justify-content:space-between;padding-top:0;border:0;color:rgba(227,244,255,.78);font-size:clamp(6px,.65vw,9px);text-shadow:0 1px 4px #000}
+
+/* Final title and control anchors: one centered mark, clear lower-corner actions. */
+.racer-title-lockup{top:clamp(14px,4vh,48px);left:50%;min-width:0;transform:translateX(-50%);font:900 italic clamp(78px,12.8vw,184px)/.73 "Barlow Condensed",sans-serif;letter-spacing:.018em;text-align:center}
+.racer-title-top{justify-content:center;gap:.12em;transform:none;color:#fff}
+.racer-title-top span{background:none;color:#fff}
+.racer-title-top img{width:.88em;height:.88em}
+.racer-title-bottom{margin-top:clamp(9px,1.2vw,18px);padding:0;transform:none;background:none;color:#fff;letter-spacing:.015em}
+.menu-rail{position:fixed;top:auto;bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px));left:max(18px,calc(env(safe-area-inset-left) + 16px));width:clamp(190px,23vw,318px)}
+.play-launch{position:fixed;right:max(18px,calc(env(safe-area-inset-right) + 16px));bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px))}
+.menu-frame footer{display:none}
