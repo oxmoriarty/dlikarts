@@ -64,7 +64,7 @@ footer a{color:var(--cyan);text-decoration:none}
 .ambient{position:absolute;z-index:0;border-radius:50%;filter:blur(10px)}
 .ambient-one{width:180px;height:180px;background:#ff4b3b;opacity:.13;left:40%;top:10%}
 .ambient-two{width:380px;height:380px;border:2px solid var(--cyan);opacity:.08;right:-130px;bottom:-220px}
-.panel{position:fixed;z-index:5;inset:0;overflow:auto;padding:clamp(26px,6vw,78px);background:rgba(5,13,22,.96);backdrop-filter:blur(16px)}
+.panel{position:fixed;z-index:5;inset:0;overflow:hidden;padding:clamp(26px,6vw,78px);background:rgba(5,13,22,.96);backdrop-filter:blur(16px)}
 .panel-heading{display:flex;justify-content:space-between;align-items:start;max-width:1180px;margin:0 auto 38px}
 .panel h2{font-size:clamp(58px,9vw,116px)}
 .racer-grid{max-width:1180px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -194,7 +194,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .panel{display:grid;place-items:center;align-content:center;padding:0;overflow:hidden;background:radial-gradient(circle at 80% 8%,rgba(23,116,255,.24),transparent 30%),linear-gradient(120deg,rgba(2,8,23,.97),rgba(4,19,49,.92))}
 .panel[hidden],.menu-screen[hidden],.splash[hidden]{display:none!important}
 .panel:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.32;background-image:linear-gradient(90deg,rgba(130,225,255,.05) 1px,transparent 1px),linear-gradient(rgba(130,225,255,.04) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(90deg,transparent,black 16%,black 84%,transparent)}
-.panel-frame{position:relative;z-index:1;display:flex;min-height:0;flex-direction:column;width:min(78vw,1180px);height:min(78dvh,760px);padding:clamp(18px,3.4vw,46px) 0;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--dli-blue) transparent}
+.panel-frame{position:relative;z-index:1;display:flex;min-height:0;flex-direction:column;width:min(78vw,1180px);height:min(78dvh,760px);padding:clamp(18px,3.4vw,46px) 0;overflow:hidden}
 .panel-heading{flex:0 0 auto;max-width:none;margin:0 0 clamp(18px,3vh,34px)}
 .panel-heading .eyebrow{margin-bottom:10px}
 .panel h2{font-size:clamp(54px,8.4vw,112px);line-height:.72}
@@ -223,8 +223,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 /* Arcade-menu composition: title lockup, left action rail, and Play at the finish line. */
 .splash{background:radial-gradient(circle at 74% 22%,rgba(68,255,227,.22),transparent 33%),linear-gradient(135deg,#1733b8 0%,#316fff 46%,#3b4cff 100%)}
 .splash-content{height:min(64dvh,580px)}
-.splash h1{max-width:950px;font-size:clamp(58px,12vw,170px);line-height:.76;color:#fff;text-shadow:0 5px 18px rgba(8,19,105,.3)}
+.splash h1{max-width:950px;font-size:clamp(58px,12vw,170px);line-height:.76;letter-spacing:.025em;color:#fff;text-shadow:0 5px 18px rgba(8,19,105,.3)}
 .splash .tagline{color:#fff;letter-spacing:.24em}
+.splash .loadline{flex-shrink:0;margin:0 auto}
 
 .menu-screen{background:#020817}
 .menu-wash{background:linear-gradient(90deg,rgba(1,7,22,.82) 0%,rgba(1,7,22,.49) 35%,rgba(1,7,22,.12) 64%,rgba(1,7,22,.2) 100%)}
@@ -257,3 +258,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible{ou
 .menu-rail{position:fixed;top:auto;bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px));left:max(18px,calc(env(safe-area-inset-left) + 16px));width:clamp(190px,23vw,318px)}
 .play-launch{position:fixed;right:max(18px,calc(env(safe-area-inset-right) + 16px));bottom:max(22px,calc(env(safe-area-inset-bottom) + 14px))}
 .menu-frame footer{display:none}
+
+/* Every front-end view is a fixed, complete screen. Compact rules below
+   reduce content density instead of introducing a page or panel scrollbar. */
+html,body,.garage-shell{width:100%;height:100%;height:100dvh;min-height:0;overflow:hidden}
+.panel-frame{overflow:hidden}
+#settings-title,#racer-title{letter-spacing:.015em}

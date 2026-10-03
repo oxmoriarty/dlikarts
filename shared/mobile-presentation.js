@@ -23,9 +23,21 @@ export async function requestMobilePresentation() {
   return Boolean(document.fullscreenElement);
 }
 
+async function requestLandscapeLock() {
+  if (!isMobileLayout()) return;
+  try {
+    await screen.orientation?.lock?.('landscape');
+  } catch { /* Browser tabs commonly require fullscreen or an installed PWA. */ }
+}
+
 export function prepareMobilePresentation() {
   if (!isMobileLayout()) return;
+  // Installed PWAs honour the manifest orientation at launch. Browsers that
+  // expose locking outside fullscreen can do the same immediately; all other
+  // browsers retry as soon as the player performs their first valid gesture.
+  void requestLandscapeLock();
   const activate = () => { void requestMobilePresentation(); };
   window.addEventListener('pointerdown', activate, { capture: true, once: true });
   window.addEventListener('keydown', activate, { capture: true, once: true });
+  window.addEventListener('orientationchange', requestLandscapeLock);
 }

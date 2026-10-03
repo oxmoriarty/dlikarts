@@ -20,7 +20,6 @@ export class UI {
     }));
     sync(); update('master', audio.setMasterVolume); update('music', audio.setMusicVolume); update('sfx', audio.setSfxVolume);
   }
-  hideLoading() { this.loading.classList.add('gone'); }
   updateTouchItem(item) {
     if (!this.touchItem || item === this.lastTouchItem) return;
     this.lastTouchItem = item;
@@ -39,6 +38,7 @@ export class UI {
     this.touchItem.innerHTML = item ? icons[item] : '';
   }
   update(race, player, metrics, audioDebug = null) {
+    document.body.classList.toggle('race-live', ['COUNTDOWN', 'RACING', 'PLAYER_FINISHED'].includes(race.state));
     const racer = player; this.position.textContent = `${racer.position}${['','ST','ND','RD','TH','TH','TH'][racer.position] || 'TH'} / ${race.racers.length}`; this.lap.textContent = `LAP ${Math.min(racer.lap + 1, 3)} / 3`; this.time.textContent = formatTime(race.time); this.item.textContent = racer.kart.item || '—'; this.updateTouchItem(racer.kart.item);
     const tier = racer.kart.tuning.driftTiers.filter(t => racer.kart.driftCharge >= t.seconds).at(-1); this.drift.textContent = racer.kart.boostTimer > 0 ? 'BOOST!' : racer.kart.drift ? (tier?.name || 'DRIFT') : 'READY'; this.drift.style.setProperty('--charge', `${Math.min(1, racer.kart.driftCharge / 2.1)}`);
     this.countdown.textContent = race.displayCountdown; this.countdown.classList.toggle('show', Boolean(race.displayCountdown)); this.warning.textContent = racer.wrongWay ? 'WRONG WAY' : ''; this.debug.textContent = `FPS ${metrics.fps} · ${metrics.ms}ms · ${metrics.calls} calls · ${Math.round(metrics.triangles / 1000)}k tris\n${metrics.geometries} geo · ${metrics.textures} tex · ${Math.round(player.kart.speed * 3.6)} km/h · ${player.kart.drift ? 'DRIFT' : 'GRIP'} · CP ${player.nextGate}/7${audioDebug ? `\nAUDIO ${audioDebug.music} · ${audioDebug.context} · E ${audioDebug.engineRate} · ${audioDebug.voices} voices` : ''}`;

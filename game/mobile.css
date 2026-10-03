@@ -5,7 +5,12 @@ body,body *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none
 button{touch-action:none}
 
 @media (pointer:coarse), (max-width:760px){
-  #touch-controls{display:block}
+  #touch-controls{display:none}
+  body.race-live #touch-controls{display:block}
+  body:not(.race-live) #touch-controls{display:none!important}
+  body.race-live[data-touch-steering="screen"] #touch-controls .touch-left,
+  body.race-live[data-touch-steering="screen"] #touch-controls .touch-icon:not(#touch-item),
+  body.race-live[data-touch-steering="screen"] #race-actions{display:none!important}
 }
 
 @media (pointer:coarse) and (orientation:landscape), (max-width:760px) and (orientation:landscape){
@@ -58,8 +63,16 @@ button{touch-action:none}
   body #touch-controls #touch-item.empty{visibility:hidden;pointer-events:none;opacity:0}
   body #touch-controls .touch-right .drift-control{right:var(--screen-edge);top:auto;bottom:var(--stack-bottom)}
   body #touch-controls .touch-right .recover{display:none!important}
-  body[data-touch-steering="screen"] #touch-controls .touch-left{display:none!important}
+  /* Side-touch steering intentionally leaves only a collected power-up on
+     screen. Steering is performed by touching the screen halves and the kart
+     accelerates automatically, so no pedals, drift, recovery, or race tools
+     obscure the racing camera. */
+  body.race-live[data-touch-steering="screen"] #touch-controls .touch-left,
+  body.race-live[data-touch-steering="screen"] #touch-controls .touch-right .touch-icon:not(#touch-item),
+  body.race-live[data-touch-steering="screen"] #race-actions{display:none!important}
   body[data-touch-steering="screen"] #game{cursor:ew-resize}
 }
 
-@media (max-width:760px) and (orientation:portrait){.rotate{display:grid}}
+/* Orientation is requested by shared/mobile-presentation.js. Never replace
+   the game with a portrait-only rotate screen while that request is pending. */
+@media (max-width:760px) and (orientation:portrait){.rotate{display:none!important}}

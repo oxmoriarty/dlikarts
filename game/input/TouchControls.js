@@ -34,10 +34,13 @@ export class TouchControls {
     if (!touchLayout) return;
     // Touch driving intentionally mirrors keyboard driving: acceleration is
     // held by the player, while BRAKE first stops and then reverses the kart.
-    this.input.throttle = h.has('accelerate') ? 1 : 0;
-    this.input.brake = h.has('brake') ? 1 : 0;
+    // Side-touch steering deliberately keeps the racing surface unobstructed:
+    // the kart drives forward automatically and each half of the screen only
+    // steers. The held pickup remains the sole visible touch action.
+    this.input.throttle = this.controlMode === 'screen' ? 1 : (h.has('accelerate') ? 1 : 0);
+    this.input.brake = this.controlMode === 'screen' ? 0 : (h.has('brake') ? 1 : 0);
     const screenSteer = [...this.screenSteerPointers.values()];
     this.input.steer = this.controlMode === 'screen' ? ((screenSteer.includes('right') ? 1 : 0) - (screenSteer.includes('left') ? 1 : 0)) : ((h.has('right') ? 1 : 0) - (h.has('left') ? 1 : 0));
-    this.input.drift = h.has('drift');
+    this.input.drift = this.controlMode === 'screen' ? false : h.has('drift');
   }
 }

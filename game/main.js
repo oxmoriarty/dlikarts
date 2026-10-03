@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FixedStepLoop } from './core/FixedStepLoop.js';
 import { InputState } from './input/InputState.js';
 import { KeyboardInput } from './input/KeyboardInput.js';
-import { TouchControls } from './input/TouchControls.js?v=touch-control-modes-1';
+import { TouchControls } from './input/TouchControls.js?v=landscape-controls-1';
 import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=battle-pod-2';
 import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gateways-4';
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=battle-pod-2';
@@ -11,10 +11,10 @@ import { KartVisual } from './vehicle/KartVisual.js?v=battle-pod-2';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=battle-pod-2';
-import { UI } from './ui/UI.js?v=battle-pod-1';
+import { UI } from './ui/UI.js?v=landscape-controls-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
 import { AudioManager } from './audio/AudioManager.js?v=touch-control-modes-1';
-import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js';
+import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=landscape-lock-1';
 
 const canvas = document.querySelector('#game');
 prepareMobilePresentation();
@@ -56,9 +56,15 @@ async function boot() {
     assertAsset(kartGltf.scene, ['DRIVER_SEAT','CAMERA_TARGET','WHEEL_FL','WHEEL_FR','WHEEL_RL','WHEEL_RR','STEER_WHEEL_FL','STEER_WHEEL_FR','STEERING_WHEEL'], 'Guatam kart');
     shadowify(characterGltf.scene); shadowify(kartGltf.scene);
     game = createGame(characterGltf, kartGltf);
-    ui.hideLoading(); document.querySelector('#start').classList.remove('hidden'); audio.playMusic('menu');
+    const startButton = document.querySelector('#start-race');
+    startButton.disabled = false; startButton.setAttribute('aria-busy', 'false'); audio.playMusic('menu');
     new FixedStepLoop({ update, render }).start();
-  } catch (error) { console.error(error); document.querySelector('#loading').innerHTML = `<div class="brand">LOAD<span>ERROR</span></div><p>${error.message}</p>`; }
+  } catch (error) {
+    console.error(error);
+    const message = document.querySelector('#race-load-error');
+    message.textContent = 'The race could not load. Please reload and try again.'; message.hidden = false;
+    document.querySelector('#start-race').setAttribute('aria-busy', 'false');
+  }
 }
 
 function createGame(characterGltf, kartGltf) {

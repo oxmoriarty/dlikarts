@@ -1,6 +1,6 @@
 {
-  "name": "DliKarts",
-  "short_name": "DliKarts",
+  "name": "Dlicom Racers",
+  "short_name": "Dlicom Racers",
   "start_url": "/landing/?view=menu",
   "scope": "/",
   "display": "fullscreen",

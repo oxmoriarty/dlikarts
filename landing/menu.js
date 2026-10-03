@@ -1,5 +1,5 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-4';
-import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js';
+import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=landscape-lock-1';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
