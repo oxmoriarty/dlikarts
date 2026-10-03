@@ -1,5 +1,5 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-4';
-import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=landscape-lock-1';
+import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
@@ -15,7 +15,7 @@ prepareMobilePresentation();
 
 function revealMenu() {
   splash.classList.add('leaving');
-  window.setTimeout(() => { splash.hidden = true; menu.hidden = false; menu.classList.add('entered'); }, 460);
+  window.setTimeout(() => { splash.hidden = true; menu.hidden = false; menu.classList.add('entered'); void requestMobilePresentation(); }, 460);
 }
 
 function openPanel(panelId) {
@@ -41,9 +41,9 @@ if (requestedPanel === 'settings') {
 } else if (requestedView === 'menu') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
 } else window.setTimeout(revealMenu, 2100);
-document.querySelector('#open-racers').addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('racers-panel'); });
-document.querySelector('#open-howto')?.addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('howto-panel'); });
-document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', async () => { await audio.unlock(); void requestMobilePresentation(); openPanel('settings-panel'); }));
+document.querySelector('#open-racers').addEventListener('click', () => { void audio.unlock(); openPanel('racers-panel'); void requestMobilePresentation(); });
+document.querySelector('#open-howto')?.addEventListener('click', () => { void audio.unlock(); openPanel('howto-panel'); void requestMobilePresentation(); });
+document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', () => { void audio.unlock(); openPanel('settings-panel'); void requestMobilePresentation(); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
 document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
 document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => { playSelect();

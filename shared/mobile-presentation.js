@@ -8,6 +8,12 @@ function isMobileLayout() {
  * gesture to enter the best available immersive landscape presentation.
  */
 export async function requestMobilePresentation() {
+  try {
+    if (window.parent !== window && window.parent.dlicomPresentation) {
+      await window.parent.dlicomPresentation.request();
+      return Boolean(window.parent.document.fullscreenElement || window.parent.document.webkitFullscreenElement);
+    }
+  } catch { /* Standalone pages retain their own presentation handling. */ }
   if (!isMobileLayout()) return false;
 
   const target = document.documentElement;
@@ -37,7 +43,7 @@ export function prepareMobilePresentation() {
   // browsers retry as soon as the player performs their first valid gesture.
   void requestLandscapeLock();
   const activate = () => { void requestMobilePresentation(); };
-  window.addEventListener('pointerdown', activate, { capture: true, once: true });
-  window.addEventListener('keydown', activate, { capture: true, once: true });
+  window.addEventListener('click', activate, { passive: true });
+  window.addEventListener('keydown', activate, { capture: true });
   window.addEventListener('orientationchange', requestLandscapeLock);
 }

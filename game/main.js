@@ -14,7 +14,7 @@ import { PowerupSystem } from './powerups/PowerupSystem.js?v=battle-pod-2';
 import { UI } from './ui/UI.js?v=landscape-controls-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
 import { AudioManager } from './audio/AudioManager.js?v=touch-control-modes-1';
-import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=landscape-lock-1';
+import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
 
 const canvas = document.querySelector('#game');
 prepareMobilePresentation();
@@ -115,12 +115,12 @@ function closeRaceSettings({ playSound = true } = {}) {
   if (playSound) audio.playSfx('uiBack', { gain: .34, cooldown: 90 });
 }
 
-document.querySelector('#start-race').addEventListener('click', async () => { if (!game) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); void requestMobilePresentation(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
-document.querySelector('#pause-race').addEventListener('click', async () => { if (!raceSettingsPanel.hidden) return; await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
-document.querySelector('#resume-race').addEventListener('click', async () => { await audio.unlock(); setRacePaused(false); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); });
+document.querySelector('#start-race').addEventListener('click', () => { if (!game) return; void audio.unlock(); audio.playSfx('uiSelect', { gain: .48, cooldown: 100 }); void requestMobilePresentation(); document.querySelector('#start').classList.add('hidden'); document.body.classList.add('race-live'); game.race.state = 'COUNTDOWN'; game.race.countdown = 3; });
+document.querySelector('#pause-race').addEventListener('click', () => { if (!raceSettingsPanel.hidden) return; void audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); setRacePaused(!game?.paused); });
+document.querySelector('#resume-race').addEventListener('click', () => { void audio.unlock(); setRacePaused(false); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 }); });
 document.querySelector('#open-race-settings').addEventListener('click', async () => {
   if (!game || game.race.state === 'RESULTS') return;
-  await audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 });
+  void audio.unlock(); audio.playSfx('uiSelect', { gain: .4, cooldown: 90 });
   syncRaceSettings(); setRacePaused(true, { showPausePanel: false });
   raceSettingsPanel.hidden = false; raceSettingsClose.focus();
 });
@@ -138,7 +138,7 @@ raceControlChoice.addEventListener('change', () => {
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !raceSettingsPanel.hidden) { event.preventDefault(); closeRaceSettings(); }
 });
-document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/'; });
+document.querySelector('#exit-race').addEventListener('click', () => { if (!game) return; audio.playSfx('uiBack', { gain: .42, cooldown: 90 }); location.href = '../landing/?view=menu'; });
 
 function resolveKartCollisions(racers) {
   for (let i = 0; i < racers.length; i += 1) for (let j = i + 1; j < racers.length; j += 1) {
