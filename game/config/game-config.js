@@ -19,9 +19,10 @@ export const POWERUP_TUNING = Object.freeze({
 // decide intent (racing line, braking, overtaking and item timing), keeping
 // their handling competitive without giving them physics-only advantages.
 export const CPU_TUNING = Object.freeze({
-  // CPU drivers have the same 20 m/s physical cap as Guatam. These values
-  // let them carry competitive speed through the broad test circuit instead
-  // of braking to a crawl at every gentle curve.
+  maxSpeed: 22,
+  acceleration: 15.5,
+  // Remaining tactical limits support safe lane changes, item timing and
+  // recovery. Corner speeds are now derived from road curvature in the AI.
   baseTargetSpeed: 20,
   minimumCornerSpeed: 11.5,
   curveSpeedPenalty: 48,

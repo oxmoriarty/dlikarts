@@ -4,12 +4,12 @@ import { FixedStepLoop } from './core/FixedStepLoop.js';
 import { InputState } from './input/InputState.js';
 import { KeyboardInput } from './input/KeyboardInput.js';
 import { TouchControls } from './input/TouchControls.js?v=landscape-controls-1';
-import { KART_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=battle-pod-2';
+import { KART_TUNING, CPU_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=competitive-ai-2';
 import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gateways-4';
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=battle-pod-2';
 import { KartVisual } from './vehicle/KartVisual.js?v=battle-pod-2';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
-import { RacingLineAI } from './ai/RacingLineAI.js?v=corner-recovery-1';
+import { RacingLineAI } from './ai/RacingLineAI.js?v=competitive-ai-2';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=battle-pod-2';
 import { UI } from './ui/UI.js?v=landscape-controls-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
@@ -72,10 +72,9 @@ function createGame(characterGltf, kartGltf) {
   const playerKart = new ArcadeKart('player', KART_TUNING, track.getGridPose(0));
   const playerVisual = new KartVisual(playerKart, kartGltf.scene.clone(true), characterGltf.scene, characterGltf.animations); scene.add(playerVisual.root);
   racers.push({ id: 'guatam', player: true, kart: playerKart, visual: playerVisual });
-  // Skilled CPU pilots use the same engine, acceleration and top-speed limits
-  // as Guatam, with only enough high-speed steering response to follow the
-  // broad road safely instead of treating every bend as a wall.
-  const cpuKartTuning = { ...KART_TUNING, steerRate: 2.14, highSpeedSteerFactor: .52 };
+  // CPU-only pace and steering tuning. Player handling is unchanged; opponents
+  // have a consistent modest speed advantage, not position-based rubberbanding.
+  const cpuKartTuning = { ...KART_TUNING, maxSpeed: CPU_TUNING.maxSpeed, acceleration: CPU_TUNING.acceleration, steerRate: 2.14, highSpeedSteerFactor: .52 };
   for (let i = 0; i < 4; i += 1) {
     const kart = new ArcadeKart(`cpu-${i}`, cpuKartTuning, track.getGridPose(i + 1)); const model = kartGltf.scene.clone(true); shadowify(model);
     // Test pilots deliberately retain the approved Guatam kart palette. The
@@ -178,11 +177,11 @@ function update(dt) {
   input.clear(); keyboardInput.update(); touchInput.update();
   const enabled = race.state === 'RACING' || race.state === 'PLAYER_FINISHED';
   if (input.consume('item') && enabled) powerups.use(player); if (input.consume('recover')) input.recover = true;
-  const playerActions = autoplaySmokeTest ? game.playerAI.update(dt) : input;
+  const playerActions = autoplaySmokeTest && enabled ? game.playerAI.update(dt, racers, powerups) : input;
   player.lastActions = playerActions;
   if (autoplaySmokeTest && playerActions.useItem && enabled) powerups.use(player);
   player.kart.update(dt, playerActions, track, enabled && race.state === 'RACING');
-  for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = racer.ai.update(dt, racers, powerups); racer.lastActions = actions; if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
+  for (const racer of racers) if (!racer.player && !racer.kart.finished) { const actions = enabled ? racer.ai.update(dt, racers, powerups) : { throttle:0, brake:0, steer:0 }; racer.lastActions = actions; if (actions.useItem && enabled) powerups.use(racer); racer.kart.update(dt, actions, track, enabled); }
   resolveKartCollisions(racers); powerups.update(dt, racers); race.update(dt); audio.update(game, playerActions, dt);
   track.setFinalLapVisual(previewFinish || player.lap >= LAPS - 1);
   retireFinishedCpuVisuals(dt, racers); racers.forEach(racer => { if (!racer.retired) racer.visual.update(dt); });
