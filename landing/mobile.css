@@ -1,4 +1,13 @@
 /* Full-viewport, no-selection mobile behavior for the landing experience. */
+/* Preserve the complete supplied artwork above a separate caption strip. */
+.racers-panel .racer-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+#racers-panel .racer-card{height:auto;min-height:0;aspect-ratio:3/2;padding:8px 12px}
+#racers-panel .racer-card img{display:block!important;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:1;filter:none}
+#racers-panel .racer-card.selected strong,#racers-panel .racer-card.selected small{align-self:flex-start;background:rgba(3,13,28,.82);padding:2px 5px}
+.racers-panel .racer-card.selected:after{display:none}
+.racers-panel .racer-card .driver-number{position:absolute;top:8px;left:9px}
+.racers-panel .racer-card strong{font-size:clamp(18px,3vh,30px)!important;line-height:1}
+.racers-panel .racer-card small{margin-top:5px;font-size:clamp(6px,.9vh,8px)}
 /* Height-constrained panels use available rows rather than fixed card heights. */
 .panel-frame{padding-block:clamp(8px,2vh,24px);overflow:hidden}
 .racers-panel .racer-grid{flex:1;min-height:0;grid-template-rows:repeat(2,minmax(0,1fr));margin:0}
