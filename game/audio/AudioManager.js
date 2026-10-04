@@ -1,3 +1,4 @@
+import { GaplessMotor, seamlessMotorBuffer } from './GaplessMotor.js';
 const MUSIC = {
   menu: new URL('../../assets/audio/music/menu.ogg', import.meta.url).href,
   race: new URL('../../assets/audio/music/race.ogg', import.meta.url).href,
@@ -7,26 +8,23 @@ const MUSIC = {
 
 const SFX = {
   engine: new URL('../../assets/audio/sfx/engine-loop.wav', import.meta.url).href,
-  reverseAlert: new URL('../../assets/audio/sfx/reverse-alert.wav', import.meta.url).href,
-  drift: new URL('../../assets/audio/sfx/drift.ogg', import.meta.url).href,
-  boost: new URL('../../assets/audio/sfx/boost.ogg', import.meta.url).href,
-  collision: new URL('../../assets/audio/sfx/collision.ogg', import.meta.url).href,
-  landing: new URL('../../assets/audio/sfx/landing.ogg', import.meta.url).href,
+  drift: new URL('../../assets/audio/sfx/kart-drift.wav', import.meta.url).href,
+  boost: new URL('../../assets/audio/sfx/kart-boost.wav', import.meta.url).href,
+  collision: new URL('../../assets/audio/sfx/kart-impact.wav', import.meta.url).href,
+  landing: new URL('../../assets/audio/sfx/kart-landing.wav', import.meta.url).href,
   countdown: new URL('../../assets/audio/sfx/countdown.ogg', import.meta.url).href,
   go: new URL('../../assets/audio/sfx/go.ogg', import.meta.url).href,
-  powerupPickup: new URL('../../assets/audio/sfx/powerup-pickup.ogg', import.meta.url).href,
-  shield: new URL('../../assets/audio/sfx/shield.ogg', import.meta.url).href,
-  projectile: new URL('../../assets/audio/sfx/projectile.ogg', import.meta.url).href,
+  powerupPickup: new URL('../../assets/audio/sfx/kart-pickup.wav', import.meta.url).href,
+  shield: new URL('../../assets/audio/sfx/kart-shield.wav', import.meta.url).href,
+  projectile: new URL('../../assets/audio/sfx/kart-missile.wav', import.meta.url).href,
+  victory: new URL('../../assets/audio/sfx/kart-victory.wav', import.meta.url).href,
   lapComplete: new URL('../../assets/audio/sfx/lap-complete.ogg', import.meta.url).href,
   raceFinish: new URL('../../assets/audio/sfx/race-finish.ogg', import.meta.url).href,
-  uiSelect: new URL('../../assets/audio/sfx/ui-select.ogg', import.meta.url).href,
-  uiBack: new URL('../../assets/audio/sfx/ui-back.ogg', import.meta.url).href,
+  uiSelect: new URL('../../assets/audio/sfx/kart-click.wav', import.meta.url).href,
+  uiBack: new URL('../../assets/audio/sfx/kart-back.wav', import.meta.url).href,
 };
 
 const STORAGE_KEY = 'dlikarts.audio.v1';
-// Kept as a single switch while the sound pass is being tuned. This preserves
-// the vehicle-audio implementation without creating any engine playback.
-const ENGINE_AUDIO_ENABLED = false;
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 const approach = (current, target, speed, dt) => current + (target - current) * (1 - Math.exp(-speed * dt));
 
@@ -59,11 +57,12 @@ export class AudioManager {
   constructor() {
     this.settings = loadSettings();
     this.context = null;
+    this.soundBuffers = new Map();
     this.unlocked = false;
     this.desiredMusic = null;
     this.currentMusic = null;
     this.music = Object.fromEntries(Object.entries(MUSIC).map(([name, url]) => [name, makeAudio(url, true)]));
-    this.loops = { drift: makeAudio(SFX.drift, true) };
+    this.loops = { drift: new GaplessMotor(this, 'drift') };
     // Each active kart owns an engine loop. CPU voices are spatially
     // approximated with distance gain rather than expensive WebAudio panners.
     this.engineVoices = new Map();
@@ -85,13 +84,16 @@ export class AudioManager {
     this.pendingCollision = 0;
     this.pausedForVisibility = false;
     this.gameplayPaused = false;
-    Object.keys(SFX).filter(name => !['engine', 'reverseAlert', 'drift'].includes(name)).forEach(name => this.createPool(name, name === 'collision' ? 2 : 3));
+    Object.keys(SFX).filter(name => !['engine', 'drift'].includes(name)).forEach(name => this.createPool(name, name === 'collision' ? 2 : 3));
     document.addEventListener('visibilitychange', () => this.handleVisibility());
-    document.addEventListener('pointerdown', () => this.unlock(), { once: true, passive: true });
-    document.addEventListener('keydown', () => this.unlock(), { once: true });
+    // iOS can interrupt the context again after switching apps. A later touch
+    // must be able to resume it even after the original first-tap unlock.
+    const resumeOnGesture = () => { if (!this.unlocked || this.context?.state !== 'running') void this.unlock(); };
+    document.addEventListener('pointerdown', resumeOnGesture, { passive: true });
+    document.addEventListener('keydown', resumeOnGesture);
   }
 
-  createPool(name, count) { this.pools.set(name, Array.from({ length: count }, () => makeAudio(SFX[name]))); }
+  createPool(name, count) { this.pools.set(name, Array.from({ length: count }, () => new GaplessMotor(this, name, false))); }
   persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings)); } catch { /* Private browsing may deny storage. */ } }
   effective(bus, gain = 1) { return this.settings.muted ? 0 : clamp(this.settings.master * this.settings[bus] * gain); }
   refreshVolumes() {
@@ -99,7 +101,6 @@ export class AudioManager {
     Object.values(this.loops).forEach(audio => { audio.volume = this.effective('sfx', audio._gain); });
     this.engineVoices.forEach(voice => {
       voice.engine.volume = this.effective('sfx', voice.engine._gain);
-      voice.reverseAlert.volume = this.effective('sfx', voice.reverseAlert._gain);
     });
     this.pools.forEach(pool => pool.forEach(audio => { audio.volume = this.effective('sfx', audio._gain); }));
   }
@@ -112,13 +113,14 @@ export class AudioManager {
     if (this.gameplayPaused) {
       Object.values(this.music).forEach(audio => audio.pause());
       Object.values(this.loops).forEach(audio => audio.pause());
-      this.engineVoices.forEach(voice => { voice.engine.pause(); voice.reverseAlert.pause(); });
+      this.pools.forEach(pool => pool.forEach(audio => audio.pause()));
+      this.engineVoices.forEach(voice => voice.engine.pause());
       return;
     }
     if (!this.unlocked || document.hidden) return;
     if (this.currentMusic) this.playElement(this.music[this.currentMusic]);
     Object.values(this.loops).forEach(audio => { if (audio._wanted) this.playElement(audio); });
-    this.engineVoices.forEach(voice => { if (voice.engine._wanted) this.playElement(voice.engine); if (voice.reverseAlert._wanted) this.playElement(voice.reverseAlert); });
+    this.engineVoices.forEach(voice => { if (voice.engine._wanted) this.playElement(voice.engine); });
   }
 
   async unlock() {
@@ -126,12 +128,27 @@ export class AudioManager {
       const Context = window.AudioContext || window.webkitAudioContext;
       this.context = new Context();
     }
-    try { if (this.context?.state === 'suspended') await this.context.resume(); } catch { /* A browser can still reject a non-gesture resume. */ }
     this.unlocked = true;
+    try { if (this.context && !['running','closed'].includes(this.context.state)) await this.context.resume(); } catch { /* A browser can still reject a non-gesture resume. */ }
+    // Decode once on the race page, not on every menu interaction or kart.
+    if (document.querySelector?.('#game') && !this.raceAudioPrepared) {
+      this.raceAudioPrepared = true;
+      await Promise.all(Object.keys(SFX).map(name => this.prepareSound(name)));
+    }
     if (!document.hidden && this.desiredMusic) this.playMusic(this.desiredMusic);
   }
 
-  playElement(audio) { if (!this.unlocked || audio._failed || document.hidden || !audio.paused) return; audio.play().catch(() => {}); }
+  async prepareSound(name) {
+    if (!this.context?.decodeAudioData) return null;
+    if (!this.soundBuffers.has(name)) this.soundBuffers.set(name, fetch(SFX[name])
+      .then(response => { if (!response.ok) throw new Error('Motor asset unavailable'); return response.arrayBuffer(); })
+      .then(bytes => this.context.decodeAudioData(bytes))
+      .then(buffer => ['engine', 'drift'].includes(name) ? seamlessMotorBuffer(this.context, buffer) : buffer)
+      .catch(() => null));
+    return this.soundBuffers.get(name);
+  }
+
+  playElement(audio) { if (!this.unlocked || this.gameplayPaused || audio._failed || document.hidden || !audio.paused) return; audio.play().catch(() => {}); }
   fade(audio, target, seconds = .35, bus = 'music', stopAtEnd = false) {
     const token = ++audio._fadeToken;
     const started = performance.now(); const initial = audio._gain;
@@ -170,7 +187,8 @@ export class AudioManager {
   }
 
   playSfx(name, { gain = 1, rate = 1, cooldown = 0 } = {}) {
-    if (!this.unlocked || !this.pools.has(name)) return false;
+    if (!this.unlocked || document.hidden || this.gameplayPaused || !this.pools.has(name)) return false;
+    if (['uiSelect', 'uiBack'].includes(name) && ['COUNTDOWN', 'RACING', 'PLAYER_FINISHED'].includes(this.lastRaceState)) return false;
     const now = performance.now();
     if (now < (this.cooldowns.get(name) || 0)) return false;
     this.cooldowns.set(name, now + cooldown);
@@ -185,7 +203,7 @@ export class AudioManager {
       // Updating pitch/gain every simulation tick must not restart the media
       // element or leave old fade callbacks fighting the current value.
       audio._fadeToken += 1; audio._stopping = false; audio._wanted = true; audio._gain = clamp(gain); audio.volume = this.effective('sfx', audio._gain); this.playElement(audio);
-    } else if (!audio.paused && !audio._stopping) { audio._stopping = true; this.fade(audio, 0, .12, 'sfx', true); }
+    } else if (!audio.paused && !audio._stopping) { audio._stopping = true; this.fade(audio, 0, .06, 'sfx', true); }
     if (!active) audio._wanted = false;
   }
   setLoop(name, active, gain = 1) { this.setAudioLoop(this.loops[name], active, gain); }
@@ -196,7 +214,7 @@ export class AudioManager {
       if (event.type === 'pickup') this.playSfx('powerupPickup', { gain: .72, cooldown: 90 });
       if (event.type === 'use') {
         // Each item has a purpose-specific cue: Zipcap is propulsion, Halo
-        // Guard is an energy shield, and Rattle Pod is a forward projectile.
+        // Guard is an energy shield, and Battle Pod is a forward missile.
         if (event.powerup === 'ZIPCAP') this.playSfx('boost', { gain: .64, rate: 1.06, cooldown: 110 });
         else if (event.powerup === 'HALO GUARD') this.playSfx('shield', { gain: .66, cooldown: 110 });
         else this.playSfx('projectile', { gain: .7, cooldown: 110 });
@@ -206,48 +224,41 @@ export class AudioManager {
   getEngineVoice(racer) {
     let voice = this.engineVoices.get(racer.id);
     if (!voice) {
-      voice = { engine: makeAudio(SFX.engine, true), reverseAlert: makeAudio(SFX.reverseAlert, true), rate: .72, gain: 0, reverseGain: 0 };
+      voice = { engine: new GaplessMotor(this), rate: .82, gain: 0 };
       this.engineVoices.set(racer.id, voice);
     }
     return voice;
   }
   updateEngineVoice(racer, player, input, dt, raceActive) {
     const voice = this.getEngineVoice(racer); const { kart } = racer;
-    const moving = Math.abs(kart.speed) > .28 && !kart.finished && !racer.retired;
+    const moving = Math.abs(kart.speed) > .05 && !racer.retired;
     if (!raceActive || !moving) {
-      this.setAudioLoop(voice.engine, false); this.setAudioLoop(voice.reverseAlert, false);
+      this.setAudioLoop(voice.engine, false);
       if (racer === player) { this.engineGain = 0; this.engineRate = .72; }
       return;
     }
     const speed = clamp(Math.abs(kart.speed) / Math.max(1, kart.tuning.maxSpeed));
-    const throttle = clamp(Math.max(input?.throttle || 0, kart.boostTimer > 0 ? .75 : 0));
+    const throttle = input?.brake > 0 ? 0 : clamp(Math.max(input?.throttle || 0, kart.boostTimer > 0 ? .75 : 0));
     const reversing = kart.speed < -.28;
     // The same motor continues while coasting or reversing. Acceleration
     // raises its pitch and gain; deceleration smoothly drops them instead of
     // stopping/restarting the sound between input changes.
-    const targetRate = reversing ? .62 + speed * .26 : .70 + speed * .58 + throttle * .14;
-    const playerGain = (reversing ? .18 + speed * .18 : .16 + speed * .24 + throttle * .18) * (kart.airborne ? .82 : 1);
+    const targetRate = reversing ? .78 + speed * .16 : .86 + speed * .24 + throttle * .12;
+    const playerGain = (.14 + speed * .36 + throttle * .18) * clamp(Math.abs(kart.speed) / .65) * (kart.airborne ? .82 : 1);
     let distanceGain = 1;
     if (racer !== player) {
       const distance = kart.position.distanceTo(player.kart.position);
-      distanceGain = .09 + .48 * Math.pow(clamp(1 - distance / 34), 1.35);
+      distanceGain = .3 * Math.pow(clamp(1 - distance / 30), 2);
     }
     voice.rate = approach(voice.rate, targetRate, 7, dt);
     voice.gain = approach(voice.gain, playerGain * distanceGain, 8, dt);
     voice.engine.playbackRate = clamp(voice.rate, .58, 1.42);
     this.setAudioLoop(voice.engine, true, voice.gain);
-    // A restrained vehicle reverse alert makes negative motion distinct while
-    // the lower-pitched engine preserves continuous motor feedback.
-    voice.reverseGain = approach(voice.reverseGain, reversing ? .18 * distanceGain : 0, 9, dt);
-    this.setAudioLoop(voice.reverseAlert, reversing, voice.reverseGain);
+    // Reverse uses the same continuous motor in a lower rev range, not a
+    // distracting reversing alarm layered over every kart.
     if (racer === player) { this.engineRate = voice.rate; this.engineGain = voice.gain; }
   }
   updateEngines(game, playerInput, dt) {
-    if (!ENGINE_AUDIO_ENABLED) {
-      this.engineVoices.forEach(voice => { this.setAudioLoop(voice.engine, false); this.setAudioLoop(voice.reverseAlert, false); });
-      this.engineGain = 0;
-      return;
-    }
     const raceActive = game.race.state === 'RACING' || game.race.state === 'PLAYER_FINISHED';
     game.racers.forEach(racer => this.updateEngineVoice(racer, game.player, racer === game.player ? playerInput : racer.lastActions, dt, raceActive));
   }
@@ -255,11 +266,17 @@ export class AudioManager {
     if (!game || this.gameplayPaused) return;
     const { race, player, powerups } = game; const kart = player.kart;
     this.consumeGameplayEvents(powerups, player);
+    // Finish order is authoritative. The race can go straight to RESULTS if
+    // the last active racer finishes; don't depend on seeing an interim state.
+    if (!this.finishTriggered && player.finishOrder > 0 && kart.finished) {
+      this.finishTriggered = true;
+      this.playSfx(player.finishOrder === 1 ? 'victory' : 'raceFinish', { gain: .82 });
+      this.setLoop('drift', false);
+    }
     if (this.lastRaceState !== race.state) {
       if (race.state === 'COUNTDOWN') this.stopMusic(.18);
       if (race.state === 'RACING') { this.playSfx('go', { gain: .9, cooldown: 300 }); this.playMusic('race', .42); }
-      if (race.state === 'PLAYER_FINISHED' && !this.finishTriggered) { this.finishTriggered = true; this.playSfx('raceFinish', { gain: .92 }); this.setLoop('drift', false); }
-      if (race.state === 'RESULTS') { this.engineVoices.forEach(voice => { this.setAudioLoop(voice.engine, false); this.setAudioLoop(voice.reverseAlert, false); }); this.setLoop('drift', false); this.playMusic('results', .6); }
+      if (race.state === 'RESULTS') { this.engineVoices.forEach(voice => this.setAudioLoop(voice.engine, false)); this.setLoop('drift', false); this.playMusic('results', .6); }
       this.lastRaceState = race.state;
     }
     const countdown = race.displayCountdown;
@@ -289,11 +306,15 @@ export class AudioManager {
     if (document.hidden) {
       this.pausedForVisibility = true;
       Object.values(this.music).forEach(audio => audio.pause()); Object.values(this.loops).forEach(audio => audio.pause());
-      this.engineVoices.forEach(voice => { voice.engine.pause(); voice.reverseAlert.pause(); });
+      this.pools.forEach(pool => pool.forEach(audio => audio.pause()));
+      this.engineVoices.forEach(voice => voice.engine.pause());
     } else if (this.pausedForVisibility) {
       this.pausedForVisibility = false;
+      if (this.gameplayPaused) return;
+      if (this.context && !['running','closed'].includes(this.context.state)) void this.context.resume().catch(() => {});
       if (this.unlocked && this.currentMusic) this.playElement(this.music[this.currentMusic]);
-      this.engineVoices.forEach(voice => { if (voice.engine._wanted) this.playElement(voice.engine); if (voice.reverseAlert._wanted) this.playElement(voice.reverseAlert); });
+      Object.values(this.loops).forEach(audio => { if (audio._wanted) this.playElement(audio); });
+      this.engineVoices.forEach(voice => { if (voice.engine._wanted) this.playElement(voice.engine); });
     }
   }
   getDebug() { return { music: this.currentMusic || 'silent', context: this.context?.state || 'not-created', master: Math.round(this.settings.master * 100), musicVolume: Math.round(this.settings.music * 100), sfx: Math.round(this.settings.sfx * 100), engineRate: this.engineRate.toFixed(2), engineGain: this.engineGain.toFixed(2), engines: [...this.engineVoices.values()].filter(voice => !voice.engine.paused).length, drift: !this.loops.drift.paused, voices: [...this.pools.values()].reduce((sum, pool) => sum + pool.filter(audio => !audio.paused).length, 0) }; }

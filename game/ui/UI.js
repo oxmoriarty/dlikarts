@@ -16,7 +16,7 @@ export class UI {
       if (output) output.textContent = `${group[name].value}%`;
     }));
     const update = (name, setter) => groups.forEach(group => group[name].addEventListener('input', async event => {
-      await audio.unlock(); setter.call(audio, Number(event.target.value) / 100); sync(); this.audio?.playSfx('uiSelect', { gain: .22, cooldown: 70 });
+      await audio.unlock(); setter.call(audio, Number(event.target.value) / 100); sync();
     }));
     sync(); update('master', audio.setMasterVolume); update('music', audio.setMusicVolume); update('sfx', audio.setSfxVolume);
   }

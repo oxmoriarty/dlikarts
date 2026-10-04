@@ -53,7 +53,7 @@ test('AudioManager maps each implemented power-up to a purpose-specific effect',
   }
 });
 
-test('AudioManager leaves engine and reverse voices disabled while engine audio is off', async () => {
+test('AudioManager tracks player and CPU engine gains while moving', async () => {
   const store = new Map();
   globalThis.localStorage = { getItem: key => store.get(key) ?? null, setItem: (key, value) => store.set(key, value) };
   globalThis.document = { hidden: false, addEventListener() {} };
@@ -68,6 +68,6 @@ test('AudioManager leaves engine and reverse voices disabled while engine audio 
   const cpu = { id: 'cpu-1', lap: 0, kart: cpuKart, lastActions: { throttle: 1 } };
   const game = { race: { state: 'RACING', displayCountdown: 'GO!' }, player, racers: [player, cpu], powerups: { consumeEvents: () => [] } };
   audio.update(game, player.lastActions, 1 / 60);
-  assert.equal(audio.engineVoices.size, 0);
-  assert.equal(audio.engineGain, 0);
+  assert.equal(audio.engineVoices.size, 2);
+  assert.ok(audio.engineGain > 0);
 });

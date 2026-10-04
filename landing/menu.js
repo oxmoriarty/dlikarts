@@ -1,4 +1,4 @@
-import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-4';
+import { AudioManager } from '../game/audio/AudioManager.js?v=gapless-kart-audio-1';
 import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
 import { populateCommunity } from './community.js';
 
@@ -48,6 +48,7 @@ document.querySelector('#open-howto')?.addEventListener('click', () => { void au
 document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', () => { void audio.unlock(); openPanel('settings-panel'); void requestMobilePresentation(); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
 document.querySelector('#open-socials').addEventListener('click', () => { void audio.unlock(); openPanel('community-panel'); void requestMobilePresentation(); });
+document.querySelector('#open-game-jam').addEventListener('click', () => { void audio.unlock(); playSelect(); });
 document.querySelectorAll('.community-panel a').forEach(link => link.addEventListener('click', playSelect));
 document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
 document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => { playSelect();
