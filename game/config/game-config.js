@@ -5,6 +5,7 @@ export const LAPS = 3;
 // Gameplay-item timings live with the other central tuning values so they can
 // be balanced without touching rendering or collision code.
 export const POWERUP_TUNING = Object.freeze({
+  zipcapSeconds: 4,
   haloGuardSeconds: 7,
   // Battle Pod is a deliberate, long-range straight missile. Its impact
   // duration is shared with the kart controller for a readable tumble.

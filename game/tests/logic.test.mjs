@@ -6,9 +6,23 @@ import { RaceSystem } from '../race/RaceSystem.js';
 import { POWERUP_TUNING } from '../config/game-config.js';
 import { distanceToSegmentSqXZ } from '../powerups/battlePodMath.js';
 import { POWERUP_VISUAL_IDENTITY } from '../powerups/powerupIdentity.js';
-import { minimumRotatedY, tumbleGroundLift } from '../vehicle/tumbleMath.js';
+import { minimumRotatedY, tumbleGroundLift, impactTumblePose } from '../vehicle/tumbleMath.js';
+
+test('impact tumble launches, slows and settles continuously upright', () => {
+  assert.equal(impactTumblePose(0).roll, 0);
+  assert.equal(impactTumblePose(0).lift, 0);
+  assert.equal(impactTumblePose(1).lift, 0);
+  assert.equal(impactTumblePose(1).roll, Math.PI * 2);
+  assert.ok(Math.abs(impactTumblePose(1).settle) < 1e-12);
+  assert.equal(impactTumblePose(.41).lift, 1);
+  assert.equal(impactTumblePose(.3, -1).roll, -impactTumblePose(.3, 1).roll);
+  const early = impactTumblePose(.11).roll - impactTumblePose(.1).roll;
+  const late = impactTumblePose(.81).roll - impactTumblePose(.8).roll;
+  assert.ok(early > late);
+});
 
 const tiers = [{ name:'SPARK', seconds:.45 },{ name:'FLARE', seconds:1.15 },{ name:'COMET', seconds:2.1 }];
+test('Zipcap boost lasts four seconds', () => assert.equal(POWERUP_TUNING.zipcapSeconds, 4));
 test('drift tiers use threshold data', () => {
   assert.equal(driftTier(.1, tiers), null);
   assert.equal(driftTier(.45, tiers).name, 'SPARK');

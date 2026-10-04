@@ -6,11 +6,12 @@ import { KeyboardInput } from './input/KeyboardInput.js';
 import { TouchControls } from './input/TouchControls.js?v=landscape-controls-1';
 import { KART_TUNING, CPU_TUNING, CAMERA, QUALITY_PROFILES, chooseQuality, LAPS } from './config/game-config.js?v=competitive-ai-2';
 import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gateways-4';
-import { ArcadeKart } from './vehicle/ArcadeKart.js?v=battle-pod-2';
-import { KartVisual } from './vehicle/KartVisual.js?v=battle-pod-2';
+import { ArcadeKart } from './vehicle/ArcadeKart.js?v=exhaust-flames-1';
+import { KartVisual } from './vehicle/KartVisual.js?v=impact-tumble-2';
+import { prepareImportedKart } from './vehicle/importedModel.js';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=competitive-ai-2';
-import { PowerupSystem } from './powerups/PowerupSystem.js?v=battle-pod-2';
+import { PowerupSystem } from './powerups/PowerupSystem.js?v=zipcap-duration-4';
 import { UI } from './ui/UI.js?v=landscape-controls-1';
 import { DlicomCity } from './environment/DlicomCity.js?v=urban-infrastructure-1';
 import { AudioManager } from './audio/AudioManager.js?v=touch-control-modes-1';
@@ -44,18 +45,15 @@ function applyQuality(name) {
 }
 applyQuality(profileName); ui.onQuality = applyQuality;
 
-function assertAsset(root, names, label) { const missing = names.filter(name => !root.getObjectByName(name)); if (missing.length) throw new Error(`${label} is missing required nodes: ${missing.join(', ')}`); }
 function shadowify(root) { root.traverse(node => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } }); }
 
 async function boot() {
   try {
-    const [characterGltf, kartGltf] = await Promise.all([
-      loader.loadAsync('../assets/characters/guatam.glb'), loader.loadAsync('../assets/vehicles/guatam-kart.glb?v=approved-palette'),
+    const [drivingGltf, kartGltf] = await Promise.all([
+      loader.loadAsync('../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2'), loader.loadAsync('../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2'),
     ]);
-    assertAsset(characterGltf.scene, ['RIG_guatam_humanoid'], 'Guatam');
-    assertAsset(kartGltf.scene, ['DRIVER_SEAT','CAMERA_TARGET','WHEEL_FL','WHEEL_FR','WHEEL_RL','WHEEL_RR','STEER_WHEEL_FL','STEER_WHEEL_FR','STEERING_WHEEL'], 'Guatam kart');
-    shadowify(characterGltf.scene); shadowify(kartGltf.scene);
-    game = createGame(characterGltf, kartGltf);
+    shadowify(drivingGltf.scene); shadowify(kartGltf.scene);
+    game = createGame(drivingGltf, kartGltf);
     const startButton = document.querySelector('#start-race');
     startButton.disabled = false; startButton.setAttribute('aria-busy', 'false'); audio.playMusic('menu');
     new FixedStepLoop({ update, render }).start();
@@ -67,16 +65,16 @@ async function boot() {
   }
 }
 
-function createGame(characterGltf, kartGltf) {
+function createGame(drivingGltf, kartGltf) {
   const track = new SwitchbackYard(scene); city = new DlicomCity(scene, track, profileName); const racers = [];
   const playerKart = new ArcadeKart('player', KART_TUNING, track.getGridPose(0));
-  const playerVisual = new KartVisual(playerKart, kartGltf.scene.clone(true), characterGltf.scene, characterGltf.animations); scene.add(playerVisual.root);
+  const playerVisual = new KartVisual(playerKart, prepareImportedKart(drivingGltf.scene)); scene.add(playerVisual.root);
   racers.push({ id: 'guatam', player: true, kart: playerKart, visual: playerVisual });
   // CPU-only pace and steering tuning. Player handling is unchanged; opponents
   // have a consistent modest speed advantage, not position-based rubberbanding.
   const cpuKartTuning = { ...KART_TUNING, maxSpeed: CPU_TUNING.maxSpeed, acceleration: CPU_TUNING.acceleration, steerRate: 2.14, highSpeedSteerFactor: .52 };
   for (let i = 0; i < 4; i += 1) {
-    const kart = new ArcadeKart(`cpu-${i}`, cpuKartTuning, track.getGridPose(i + 1)); const model = kartGltf.scene.clone(true); shadowify(model);
+    const kart = new ArcadeKart(`cpu-${i}`, cpuKartTuning, track.getGridPose(i + 1)); const model = prepareImportedKart(kartGltf.scene); shadowify(model);
     // Test pilots deliberately retain the approved Guatam kart palette. The
     // old colored head-marker spheres made these shared karts look recolored.
     const visual = new KartVisual(kart, model); scene.add(visual.root);

@@ -38,6 +38,10 @@ for(let frame=0;frame<60*120;frame++) {
     if(action.useItem)powerups.use(racer);
     if(action.recover) stats[i].recoveries++;
     racer.kart.update(1/60,action,track,true);
+    assert.equal(racer.kart.airborne,false,'No point on the road may launch a kart');
+    assert.equal(racer.kart.verticalSpeed,0,'Road driving must have no ballistic jump velocity');
+    const ground=track.query(racer.kart.position,racer.kart.progress).p.y+track.roadSurfaceOffset+racer.kart.wheelGroundOffset;
+    assert.ok(Math.abs(racer.kart.position.y-ground)<.00001,'Kart root must follow the road surface');
     let delta=racer.kart.progress-previous;if(delta<-.5)delta++;if(delta>.5)delta--;
     stats[i].distance+=delta;
     stats[i].maxSpeed=Math.max(stats[i].maxSpeed,racer.kart.speed);

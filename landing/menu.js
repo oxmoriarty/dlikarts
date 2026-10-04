@@ -1,5 +1,6 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=audio-stability-4';
 import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
+import { populateCommunity } from './community.js';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
@@ -12,6 +13,7 @@ const requestedView = new URLSearchParams(location.search).get('view');
 const returnToRace = new URLSearchParams(location.search).get('return') === 'game';
 const playSelect = () => audio.playSfx('uiSelect', { gain: .34, cooldown: 70 });
 prepareMobilePresentation();
+populateCommunity();
 
 function revealMenu() {
   splash.classList.add('leaving');
@@ -45,6 +47,8 @@ document.querySelector('#open-racers').addEventListener('click', () => { void au
 document.querySelector('#open-howto')?.addEventListener('click', () => { void audio.unlock(); openPanel('howto-panel'); void requestMobilePresentation(); });
 document.querySelectorAll('#open-settings, #open-settings-copy').forEach(button => button.addEventListener('click', () => { void audio.unlock(); openPanel('settings-panel'); void requestMobilePresentation(); }));
 document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', closePanels));
+document.querySelector('#open-socials').addEventListener('click', () => { void audio.unlock(); openPanel('community-panel'); void requestMobilePresentation(); });
+document.querySelectorAll('.community-panel a').forEach(link => link.addEventListener('click', playSelect));
 document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
 document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => { playSelect();
   document.querySelectorAll('.racer-card[data-racer]').forEach(item => { item.classList.toggle('selected', item === card); item.setAttribute('aria-pressed', String(item === card)); });

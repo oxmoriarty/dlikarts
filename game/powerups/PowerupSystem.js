@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { ObjectPool } from '../core/ObjectPool.js';
-import { POWERUP_TUNING } from '../config/game-config.js?v=battle-pod-2';
+import { POWERUP_TUNING } from '../config/game-config.js?v=zipcap-duration-4';
 import { distanceToSegmentSqXZ } from './battlePodMath.js';
 import { POWERUP_VISUAL_IDENTITY } from './powerupIdentity.js';
 
@@ -145,7 +145,7 @@ export class PowerupSystem {
   }
   use(racer) {
     const type = racer.kart.item; if (!type) return false; racer.kart.item = null;
-    if (type === 'ZIPCAP') { racer.kart.boostTimer = Math.max(racer.kart.boostTimer, .85); racer.kart.boostStrength = Math.max(racer.kart.boostStrength, 9); this.events.push({ type: 'use', racer, powerup: type }); return true; }
+    if (type === 'ZIPCAP') { racer.kart.boostTimer = Math.max(racer.kart.boostTimer, POWERUP_TUNING.zipcapSeconds); racer.kart.boostStrength = Math.max(racer.kart.boostStrength, 9); this.events.push({ type: 'use', racer, powerup: type }); return true; }
     if (type === 'HALO GUARD') { racer.kart.guardTimer = POWERUP_TUNING.haloGuardSeconds; this.events.push({ type: 'use', racer, powerup: type }); return true; }
     const projectile = this.projectiles.acquire(); if (!projectile) return false;
     const launchDirection = racer.kart.forward(new THREE.Vector3()).normalize();

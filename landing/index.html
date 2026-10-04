@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="./styles.css?v=dlicom-menu-14" />
     <link rel="stylesheet" href="./responsive.css" />
     <link rel="stylesheet" href="./mobile.css?v=edge-to-edge-racer-artwork-14" />
+    <link rel="stylesheet" href="./community.css?v=2" />
     <script>
       // Run before body content paints, preventing a landing-screen flash when
       // the player intentionally goes straight to settings or the menu.
@@ -79,8 +80,25 @@
           <p class="touch-note">PREFERENCES ARE SAVED ON THIS DEVICE. AUDIO UNLOCKS AFTER YOUR FIRST TAP OR CLICK.</p>
         </div>
       </section>
+      <section class="panel community-panel" id="community-panel" aria-labelledby="community-title" hidden>
+        <div class="panel-frame screen-frame community-frame">
+          <div class="panel-heading"><div><p class="eyebrow">BEYOND THE FINISH LINE</p><h2 id="community-title">THIS IS <em>DLICOM</em></h2></div><button class="close-button" data-close aria-label="Close Dlicom page">×</button></div>
+          <div class="community-layout">
+            <aside class="community-intro">
+              <img class="community-mark" src="../assets/environment/branding/dlicom-logo-cutout.png" alt="Dlicom" />
+              <h3>STAY IN<br />THE LOOP.</h3>
+              <p>Meet the community.<br />Discover what’s next.</p>
+              <a class="whitepaper-link" href="https://whitepaper.dlicom.io/" target="_blank" rel="noopener noreferrer">EXPLORE THE WHITEPAPER <span aria-hidden="true">↗</span></a>
+            </aside>
+            <div class="community-links">
+              <nav class="social-grid" id="social-grid" aria-label="Dlicom social accounts"></nav>
+              <div class="app-downloads" id="app-downloads" aria-label="Download the Dlicom app"></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
     <script src="../shared/fit-content.js?v=1" defer></script>
-    <script type="module" src="./menu.js?v=persistent-landscape-1"></script>
+    <script type="module" src="./menu.js?v=dlicom-community-1"></script>
   </body>
 </html>

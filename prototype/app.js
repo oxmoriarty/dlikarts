@@ -25,6 +25,7 @@ const grid = new THREE.GridHelper(10,20,0x27455e,0x192b3d); grid.position.y=.007
 let character, kart, mixer, clips = [], activeAction, activeClipName = '', viewingMode = 'combo', loaded = 0;
 const node = (root, name) => root?.getObjectByName(name);
 const loader = new GLTFLoader();
+const rebuilt = new URLSearchParams(location.search).get('models') === 'rebuilt';
 const counts = { character:null, kart:null };
 
 function shadowify(root) { root.traverse(o => { if (o.isMesh) { o.castShadow=true; o.receiveShadow=true; } }); }
@@ -48,6 +49,11 @@ function fit(target, offset=1) {
 }
 function setMode(mode) {
   if (!character || !kart) return;
+  if (rebuilt) {
+    viewingMode=mode; character.visible=mode!=='kart'; kart.visible=mode==='kart';
+    fit(new THREE.Vector3(0,mode==='kart'?.45:.75,0),.65);
+    return;
+  }
   viewingMode=mode;
   character.visible = mode !== 'kart'; kart.visible = mode !== 'character';
   if (mode==='combo') {
@@ -80,8 +86,10 @@ function setWheels() {
   const wheelControl=document.querySelector('#steeringWheel');
   const steer=THREE.MathUtils.degToRad(+frontControl.value);
   const wheel=THREE.MathUtils.degToRad(+wheelControl.value);
-  ['WHEEL_FL','WHEEL_FR','WHEEL_RL','WHEEL_RR'].forEach(n=>{const o=node(kart,n); if(o)o.rotation.x=roll;});
-  ['STEER_WHEEL_FL','STEER_WHEEL_FR'].forEach(n=>{const o=node(kart,n); if(o)o.rotation.z=steer;});
+  (rebuilt?[kart,character]:[kart]).forEach(root=>{
+    ['WHEEL_FL','WHEEL_FR','WHEEL_RL','WHEEL_RR'].forEach(n=>{const o=node(root,n); if(o)o.rotation.x=roll;});
+    ['STEER_WHEEL_FL','STEER_WHEEL_FR'].forEach(n=>{const o=node(root,n); if(o){if(rebuilt)o.rotation.y=steer;else o.rotation.z=steer;}});
+  });
   const sw=node(kart,'STEERING_WHEEL'); if(sw) sw.rotation.y=wheel;
   document.querySelector('#rollValue').value=`${Math.round(THREE.MathUtils.radToDeg(roll))}°`; document.querySelector('#steerValue').value=`${Math.round(THREE.MathUtils.radToDeg(steer))}°`; document.querySelector('#wheelValue').value=`${Math.round(THREE.MathUtils.radToDeg(wheel))}°`;
 }
@@ -98,10 +106,17 @@ document.querySelector('#frontSteer').addEventListener('input',event=>{
 document.querySelector('#focus').addEventListener('change',e=>setMode(e.target.value));
 document.querySelector('#resetView').onclick=()=>setMode(document.querySelector('#focus').value);
 Promise.all([
-  loader.loadAsync('../assets/characters/guatam.glb'), loader.loadAsync('../assets/vehicles/guatam-kart.glb?v=approved-palette')
+  loader.loadAsync(rebuilt?'../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2':'../assets/characters/guatam.glb'), loader.loadAsync(rebuilt?'../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2':'../assets/vehicles/guatam-kart.glb?v=approved-palette')
 ]).then(([cg,kg])=>{
   character=cg.scene; kart=kg.scene; character.name='CHARACTER_RUNTIME'; kart.name='KART_RUNTIME'; shadowify(character); shadowify(kart);
   scene.add(character,kart); counts.character=measure(character,cg); counts.kart=measure(kart,kg); clips=cg.animations; mixer=new THREE.AnimationMixer(character); setupClips(); showStats(); setMode('combo'); setWheels(); status.textContent='Runtime assets loaded'; status.classList.add('done');
+  if(rebuilt){
+    document.querySelector('#focus option[value="character"]').disabled=true;
+    document.querySelector('.deck').textContent='Rebuilt Gautam and kart — clean solid-wheel models.';
+    document.querySelector('.clip-panel').hidden=true;
+    document.querySelector('#steeringWheel').disabled=true;
+    statsEl.textContent=statsEl.textContent.replace('CHARACTER','DRIVER + KART').replace('wheels + sockets live','solid wheels + steering');
+  }
 }).catch(error=>{ console.error('GLB load failed',error); status.textContent='Asset load failed — see console'; });
 function resize(){ const w=canvas.clientWidth,h=canvas.clientHeight; if(!w||!h)return; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 const clock=new THREE.Clock();

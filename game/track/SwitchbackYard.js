@@ -56,7 +56,6 @@ export class SwitchbackYard {
       mascot: new THREE.MeshBasicMaterial({ map: cutoutTexture('../../assets/environment/branding/dlicom-mascot-cutout.png'), transparent: true, side: THREE.DoubleSide, depthWrite: false }),
     };
     this.buildSamples(); this.buildVisuals();
-    this.jumpStart = .43; this.jumpEnd = .47;
   }
   buildSamples() {
     const count = 300;
@@ -97,7 +96,7 @@ export class SwitchbackYard {
     const base = this.sampleAt(.988 - slot.row * .008);
     return { position: base.p.clone().addScaledVector(base.normal, slot.lane * this.gridLaneSpacing).add(new THREE.Vector3(0, this.roadSurfaceOffset + this.kartWheelGroundOffset, 0)), yaw: Math.atan2(base.tangent.x, base.tangent.z), progress: base.t };
   }
-  isOnJump(progress) { return progress > this.jumpStart && progress < this.jumpEnd; }
+  isOnJump() { return false; }
   buildVisuals() {
     const roadMat = new THREE.MeshStandardMaterial({ color: 0x27394c, roughness: .9, metalness: .03, vertexColors: true });
     const verts = [], colors = [], indices = [];

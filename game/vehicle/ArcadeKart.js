@@ -13,7 +13,7 @@ export class ArcadeKart {
     this.grounded = true; this.drift = false; this.driftDirection = 0; this.driftCharge = 0; this.boostTimer = 0; this.boostStrength = 0;
     this.airborne = false; this.jumpUsed = false; this.offRoad = false; this.hitTimer = 0; this.wallImpact = 0; this.guardTimer = 0; this.item = null; this.finished = false;
     this.tumbleTimer = 0; this.tumbleDuration = 0; this.tumbleTurns = 0; this.tumbleDirection = 1; this.tumbleAngle = 0;
-    this.lean = 0; this.pitch = 0; this.recoveryTimer = 0; this.lastSafe = pose.position.clone(); this.lastSafeYaw = pose.yaw;
+    this.visualSteer = 0; this.lean = 0; this.pitch = 0; this.recoveryTimer = 0; this.lastSafe = pose.position.clone(); this.lastSafeYaw = pose.yaw;
   }
   forward(out = new THREE.Vector3()) { return out.set(Math.sin(this.yaw), 0, Math.cos(this.yaw)); }
   right(out = new THREE.Vector3()) { return out.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw)); }
@@ -28,6 +28,9 @@ export class ArcadeKart {
   }
   reset() { this.position.copy(this.lastSafe); this.previousPosition.copy(this.lastSafe); this.yaw = this.previousYaw = this.lastSafeYaw; this.speed = 0; this.lateralSpeed = 0; this.verticalSpeed = 0; this.airborne = false; this.drift = false; this.driftCharge = 0; this.boostTimer = 0; this.tumbleTimer = 0; this.tumbleAngle = 0; }
   update(dt, input, track, enabled = true) {
+    this.visualThrottle = enabled && !this.finished && this.tumbleTimer <= 0 && !(input.brake > 0) ? THREE.MathUtils.clamp(input.throttle || 0, 0, 1) : 0;
+    // Observation only: wheel animation uses steering, not chassis lean.
+    this.visualSteer = enabled && !this.finished && this.tumbleTimer <= 0 ? THREE.MathUtils.clamp(input.steer || 0, -1, 1) : 0;
     this.previousPosition.copy(this.position); this.previousYaw = this.yaw; this.hitTimer = Math.max(0, this.hitTimer - dt); this.guardTimer = Math.max(0, this.guardTimer - dt); this.tumbleTimer = Math.max(0, this.tumbleTimer - dt);
     const tumbling = this.tumbleTimer > 0;
     const tumbleProgress = this.tumbleDuration > 0 ? 1 - this.tumbleTimer / this.tumbleDuration : 1;
@@ -73,11 +76,11 @@ export class ArcadeKart {
     const f = this.forward(), r = this.right(); this.position.addScaledVector(f, this.speed * dt).addScaledVector(r, this.lateralSpeed * dt);
     const q = track.constrain(this); this.progress = q.t; this.offRoad = !q.onRoad;
     if (q.onRoad) { this.lastSafe.copy(this.position); this.lastSafeYaw = this.yaw; }
-    if (!this.airborne && track.isOnJump(this.progress) && Math.abs(this.speed) > 9 && !this.jumpUsed) { this.airborne = true; this.verticalSpeed = this.tuning.jumpVelocity; this.jumpUsed = true; }
-    if (!track.isOnJump(this.progress)) this.jumpUsed = false;
     const settledY = q.p.y + track.roadSurfaceOffset + this.wheelGroundOffset;
-    if (this.airborne) { this.verticalSpeed -= this.tuning.gravity * dt; this.position.y += this.verticalSpeed * dt; if (this.position.y <= settledY) { this.position.y = settledY; this.verticalSpeed = 0; this.airborne = false; this.hitTimer = .1; } }
-    else this.position.y = settledY;
+    // This circuit has no ramps: road progress must never launch a kart.
+    // Tumble clearance is handled independently by KartVisual, not ballistics.
+    this.airborne = false; this.grounded = true; this.verticalSpeed = 0; this.jumpUsed = false;
+    this.position.y = settledY;
     this.lean += ((this.drift ? steer * -.34 : steer * -.18) - this.lean) * Math.min(1, 7 * dt);
     this.pitch += (((forwardInput - brake) * -.055 + (this.airborne ? -.12 : 0)) - this.pitch) * Math.min(1, 6 * dt);
   }
