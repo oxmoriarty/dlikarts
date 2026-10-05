@@ -9,6 +9,7 @@ import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gatew
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=exhaust-flames-1';
 import { KartVisual } from './vehicle/KartVisual.js?v=impact-tumble-2';
 import { prepareImportedKart } from './vehicle/importedModel.js';
+import { RACERS, racerId } from '../shared/racers.js';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=competitive-ai-2';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=zipcap-duration-4';
@@ -38,6 +39,7 @@ const raceQualityChoice = document.querySelector('#race-quality-choice');
 const raceControlChoice = document.querySelector('#race-control-choice');
 const autoplaySmokeTest = new URLSearchParams(location.search).has('autoplay');
 const previewFinish = new URLSearchParams(location.search).has('previewFinish');
+const selectedRacer = racerId(new URLSearchParams(location.search).get('racer'));
 let game = null; let city = null; let frameSamples = []; let lastRender = performance.now(); let qualityProfile;
 
 function applyQuality(name) {
@@ -50,7 +52,7 @@ function shadowify(root) { root.traverse(node => { if (node.isMesh) { node.castS
 async function boot() {
   try {
     const [drivingGltf, kartGltf] = await Promise.all([
-      loader.loadAsync('../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2'), loader.loadAsync('../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2'),
+      loader.loadAsync(RACERS[selectedRacer].driving), loader.loadAsync('../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2'),
     ]);
     shadowify(drivingGltf.scene); shadowify(kartGltf.scene);
     game = createGame(drivingGltf, kartGltf);
@@ -69,7 +71,7 @@ function createGame(drivingGltf, kartGltf) {
   const track = new SwitchbackYard(scene); city = new DlicomCity(scene, track, profileName); const racers = [];
   const playerKart = new ArcadeKart('player', KART_TUNING, track.getGridPose(0));
   const playerVisual = new KartVisual(playerKart, prepareImportedKart(drivingGltf.scene)); scene.add(playerVisual.root);
-  racers.push({ id: 'guatam', player: true, kart: playerKart, visual: playerVisual });
+  racers.push({ id: selectedRacer, player: true, kart: playerKart, visual: playerVisual });
   // CPU-only pace and steering tuning. Player handling is unchanged; opponents
   // have a consistent modest speed advantage, not position-based rubberbanding.
   const cpuKartTuning = { ...KART_TUNING, maxSpeed: CPU_TUNING.maxSpeed, acceleration: CPU_TUNING.acceleration, steerRate: 2.14, highSpeedSteerFactor: .52 };

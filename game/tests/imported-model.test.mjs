@@ -41,22 +41,23 @@ function geometryScene(bytes,json) {
   const root=new THREE.Group();json.scenes[json.scene||0].nodes.forEach(i=>root.add(nodes[i]));return root;
 }
 
-for (const folder of ['new-models/runtime','gautam-rebuilt']) for (const filename of ['GautamDriving.glb','GautamKart.glb']) {
+for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt']) for (const suffix of ['Driving.glb','Kart.glb']) {
+  const filename=(folder==='retree-rebuilt'?'Retree':'Gautam')+suffix;
   test(`${folder}/${filename} has a lightweight valid runtime mesh and ground-root adaptation`, () => {
     const bytes=readFileSync(new URL(`../../assets/characters/${folder}/${filename}`,import.meta.url));
     const json=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)));
     const primitive=json.meshes[0].primitives[0];
     const triangles=json.meshes.reduce((sum,m)=>sum+m.primitives.reduce((s,p)=>s+json.accessors[p.indices].count/3,0),0);
-    assert.ok(triangles<= (filename==='GautamDriving.glb'?45000:30000));
+    assert.ok(triangles<= (suffix==='Driving.glb'?45000:30000));
     for(const label of ['FL','FR','RL','RR']) {
       const node=json.nodes.find(n=>n.name==='WHEEL_'+label);
       assert.ok(node?.extras.importedWheel);assert.ok(json.meshes[node.mesh].primitives.length);
     }
     assert.ok(bytes.length>1000);
-    if(folder==='gautam-rebuilt') {
+    if(folder.endsWith('-rebuilt')) {
       assert.equal(json.images?.length||0,0);
       assert.ok(json.materials.every(m=>!m.alphaMode||m.alphaMode==='OPAQUE'),'No transparent tire material');
-      assert.equal(json.meshes.length,filename==='GautamDriving.glb'?6:5);
+      assert.equal(json.meshes.length,suffix==='Driving.glb'?6:5);
       for(const label of ['FL','FR','RL','RR']) {
         const n=json.nodes.find(n=>n.name==='WHEEL_'+label),p=json.meshes[n.mesh].primitives[0];
         assert.equal(n.extras.treadPattern,'circumferential-vertical-grooves');
@@ -89,6 +90,17 @@ for (const folder of ['new-models/runtime','gautam-rebuilt']) for (const filenam
     assert.ok(new THREE.Box3().setFromObject(visual.root).min.y>=-1e-6,'Tumbling imported model must stay above the road');
     const actual=prepareImportedKart(geometryScene(bytes,json));
     const actualVisual=new KartVisual({...kart,tumbleAngle:0,lean:-.18},actual);
+    if(folder==='retree-rebuilt') {
+      assert.equal(actualVisual.exhaust.jets.length,2);
+      for(const [i,label] of ['LEFT','RIGHT'].entries()) {
+        const socket=actual.getObjectByName('EXHAUST_SOCKET_'+label);
+        assert.ok(socket,'Authored exhaust socket exists');
+        actual.updateMatrixWorld(true);
+        const outlet=socket.getWorldPosition(new THREE.Vector3());
+        const flame=actualVisual.exhaust.jets[i].getWorldPosition(new THREE.Vector3());
+        assert.ok(outlet.distanceTo(flame)<1e-6,'Flame originates at the exact Retree exhaust outlet');
+      }
+    }
     actualVisual.update(.02);
     assert.ok(actualVisual.wheels.every(w=>w.rotation.x>0));
     assert.ok(actualVisual.front.every(w=>w.rotation.y<0));

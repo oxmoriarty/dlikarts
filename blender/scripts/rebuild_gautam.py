@@ -57,7 +57,7 @@ def mushroom(parts,center,scale=1):
     for dx,dz,r in [(-.06,.03,.024),(.048,.04,.026),(0,-.006,.021)]:
         parts.append(uv('Mushroom spot',(x+dx*scale,y-.04*scale,z+.025*scale+dz*scale),(r*scale,.008*scale,r*.7*scale),white))
 
-def wheel(label,x,y,r,width):
+def wheel(label,x,y,r,width,rim_ring=None):
     center=Vector((x,y,r));pivot=empty(('STEER_WHEEL_' if label.startswith('F') else 'AXLE_')+label,center)
     # Closed barrel: full end caps and continuous sidewalls, no alpha texture.
     vertices=[];faces=[];profile=[(-width/2,0),(-width/2,r*.83),(-width*.40,r*.98)]
@@ -80,6 +80,8 @@ def wheel(label,x,y,r,width):
     for side in [-1,1]:
         face=x+side*(width/2+.001)
         parts.append(cyl('Solid rim',(face,y,r),r*.61,.014,rim,32,(0,math.pi/2,0)))
+        if rim_ring:
+            parts.append(torus('Colored rim ring',(face+side*.012,y,r),r*.59,r*.035,rim_ring,(0,math.pi/2,0),32,8))
         parts.append(cyl('Hub',(face+side*.012,y,r),r*.19,.027,silver,20,(0,math.pi/2,0)))
         for i in range(6):
             a=i*math.tau/6
@@ -160,7 +162,7 @@ def character():
 
 render='--render' in sys.argv
 bpy.context.preferences.filepaths.save_version=0
-for driven in ([True] if '--driving-only' in sys.argv else [False,True]):
+for driven in (([True] if '--driving-only' in sys.argv else [False,True]) if __name__ == '__main__' else []):
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     kart()
     if driven:character()

@@ -1,0 +1,16 @@
+{
+  "Retree": {
+    "triangles": 23196
+  },
+  "RetreeKart": {
+    "triangles": 18788
+  },
+  "RetreeDriving": {
+    "triangles": 41768
+  },
+  "original_sha256": {
+    "Retree.glb": "bc86d48e9cb43aec62226591909745dfd1314628b0466e085d8df41dcaaca0d0",
+    "RetreeDriving.glb": "6e06b7e4853ae12f5b694eb9bfbd53f64c2a94a2feb35f2649ca4b744076657e",
+    "RetreeKart.glb": "5fbf787d591d47faf9be38099783d9c04ba2e0f3d817a6c47342f582640f1693"
+  }
+}

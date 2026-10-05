@@ -1,6 +1,7 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=gapless-kart-audio-1';
 import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
 import { populateCommunity } from './community.js';
+import { RACERS, racerId } from '../shared/racers.js';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
@@ -50,10 +51,22 @@ document.querySelectorAll('[data-close]').forEach(button => button.addEventListe
 document.querySelector('#open-socials').addEventListener('click', () => { void audio.unlock(); openPanel('community-panel'); void requestMobilePresentation(); });
 document.querySelector('#open-game-jam').addEventListener('click', () => { void audio.unlock(); playSelect(); });
 document.querySelectorAll('.community-panel a').forEach(link => link.addEventListener('click', playSelect));
-document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = '../game/'; });
+let selectedRacer = 'guatam';
+try { selectedRacer = racerId(localStorage.getItem('dlikarts.racer')); } catch { /* Storage can be unavailable in private browsing. */ }
+function selectRacer(id) {
+  selectedRacer = racerId(id);
+  document.querySelectorAll('.racer-card[data-racer]').forEach(card => {
+    const selected = card.dataset.racer === selectedRacer;
+    card.classList.toggle('selected', selected); card.setAttribute('aria-pressed', String(selected));
+  });
+  document.querySelector('#selection-message').textContent = `${RACERS[selectedRacer].name} IS READY TO RACE.`;
+  document.querySelector('#launch-game').innerHTML = `RACE AS ${RACERS[selectedRacer].name} <span>→</span>`;
+}
+selectRacer(selectedRacer);
+document.querySelector('#launch-game').addEventListener('click', () => { playSelect(); location.href = `../game/?racer=${selectedRacer}`; });
 document.querySelectorAll('.racer-card[data-racer]').forEach(card => card.addEventListener('click', () => { playSelect();
-  document.querySelectorAll('.racer-card[data-racer]').forEach(item => { item.classList.toggle('selected', item === card); item.setAttribute('aria-pressed', String(item === card)); });
-  document.querySelector('#selection-message').textContent = `${card.dataset.racer.toUpperCase()} IS READY TO RACE.`;
+  selectRacer(card.dataset.racer);
+  try { localStorage.setItem('dlikarts.racer', selectedRacer); } catch { /* Selection still works without persistence. */ }
 }));
 document.addEventListener('keydown', event => { if (event.key === 'Escape') closePanels(); });
 settings.master.addEventListener('input', () => { syncOutput(settings.master); audio.setMasterVolume(Number(settings.master.value) / 100); playSelect(); });

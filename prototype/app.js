@@ -22,10 +22,11 @@ const floor = new THREE.Mesh(new THREE.CircleGeometry(5,48), new THREE.MeshStand
 floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
 const grid = new THREE.GridHelper(10,20,0x27455e,0x192b3d); grid.position.y=.007; scene.add(grid);
 
-let character, kart, mixer, clips = [], activeAction, activeClipName = '', viewingMode = 'combo', loaded = 0;
+let character, kart, standing, mixer, clips = [], activeAction, activeClipName = '', viewingMode = 'combo', loaded = 0;
 const node = (root, name) => root?.getObjectByName(name);
 const loader = new GLTFLoader();
-const rebuilt = new URLSearchParams(location.search).get('models') === 'rebuilt';
+const retree = new URLSearchParams(location.search).get('models') === 'retree';
+const rebuilt = retree || new URLSearchParams(location.search).get('models') === 'rebuilt';
 const counts = { character:null, kart:null };
 
 function shadowify(root) { root.traverse(o => { if (o.isMesh) { o.castShadow=true; o.receiveShadow=true; } }); }
@@ -45,12 +46,13 @@ function fit(target, offset=1) {
   // Portrait viewports need a wider framing for the kart's 2.7 m wheelbase.
   const portraitBoost = camera.aspect < .85 ? 1.58 : 1;
   const distance = offset * portraitBoost;
-  controls.target.copy(target); camera.position.copy(target).add(new THREE.Vector3(3.8*distance,2.8*distance,-5*distance)); controls.update();
+  controls.target.copy(target); camera.position.copy(target).add(new THREE.Vector3(3.8*distance,2.8*distance,(retree?5:-5)*distance)); controls.update();
 }
 function setMode(mode) {
   if (!character || !kart) return;
   if (rebuilt) {
-    viewingMode=mode; character.visible=mode!=='kart'; kart.visible=mode==='kart';
+    viewingMode=mode; character.visible=mode!=='kart' && !(standing && mode==='character'); kart.visible=mode==='kart';
+    if(standing) standing.visible=mode==='character';
     fit(new THREE.Vector3(0,mode==='kart'?.45:.75,0),.65);
     return;
   }
@@ -106,13 +108,17 @@ document.querySelector('#frontSteer').addEventListener('input',event=>{
 document.querySelector('#focus').addEventListener('change',e=>setMode(e.target.value));
 document.querySelector('#resetView').onclick=()=>setMode(document.querySelector('#focus').value);
 Promise.all([
-  loader.loadAsync(rebuilt?'../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2':'../assets/characters/guatam.glb'), loader.loadAsync(rebuilt?'../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2':'../assets/vehicles/guatam-kart.glb?v=approved-palette')
-]).then(([cg,kg])=>{
+  loader.loadAsync(retree?'../assets/characters/retree-rebuilt/RetreeDriving.glb?v=retree-1':rebuilt?'../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2':'../assets/characters/guatam.glb'),
+  loader.loadAsync(retree?'../assets/characters/retree-rebuilt/RetreeKart.glb?v=retree-1':rebuilt?'../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2':'../assets/vehicles/guatam-kart.glb?v=approved-palette'),
+  retree?loader.loadAsync('../assets/characters/retree-rebuilt/Retree.glb?v=retree-1'):Promise.resolve(null)
+]).then(([cg,kg,sg])=>{
+  if(sg){standing=sg.scene;standing.visible=false;shadowify(standing);scene.add(standing);}
   character=cg.scene; kart=kg.scene; character.name='CHARACTER_RUNTIME'; kart.name='KART_RUNTIME'; shadowify(character); shadowify(kart);
   scene.add(character,kart); counts.character=measure(character,cg); counts.kart=measure(kart,kg); clips=cg.animations; mixer=new THREE.AnimationMixer(character); setupClips(); showStats(); setMode('combo'); setWheels(); status.textContent='Runtime assets loaded'; status.classList.add('done');
   if(rebuilt){
-    document.querySelector('#focus option[value="character"]').disabled=true;
-    document.querySelector('.deck').textContent='Rebuilt Gautam and kart — clean solid-wheel models.';
+    document.querySelector('#focus option[value="character"]').disabled=!standing;
+    if(retree) document.querySelector('#focus option[value="character"]').textContent='Retree standing';
+    document.querySelector('.deck').textContent=retree?'Rebuilt Retree — standing character, kart, and driving model.':'Rebuilt Gautam and kart — clean solid-wheel models.';
     document.querySelector('.clip-panel').hidden=true;
     document.querySelector('#steeringWheel').disabled=true;
     statsEl.textContent=statsEl.textContent.replace('CHARACTER','DRIVER + KART').replace('wheels + sockets live','solid wheels + steering');

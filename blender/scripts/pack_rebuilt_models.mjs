@@ -2,8 +2,8 @@
 // texture coordinates and compact the opaque vertex palette to normalized bytes.
 import fs from 'node:fs';
 import path from 'node:path';
-const folder=path.resolve('assets/characters/gautam-rebuilt');
-for(const name of ['GautamKart','GautamDriving']) {
+const folder=path.resolve(process.argv[2] || 'assets/characters/gautam-rebuilt');
+for(const name of (process.argv.slice(3).length ? process.argv.slice(3) : ['GautamKart','GautamDriving'])) {
   const file=path.join(folder,name+'.glb'),bytes=fs.readFileSync(file);
   const jsonSize=bytes.readUInt32LE(12),json=JSON.parse(bytes.subarray(20,20+jsonSize));
   const oldAccess=json.accessors,oldViews=json.bufferViews,base=28+jsonSize;

@@ -3,7 +3,7 @@
 .racers-panel .racer-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 #racers-panel .racer-card{height:auto;min-height:0;aspect-ratio:3/2;padding:8px 12px}
 #racers-panel .racer-card img{display:block!important;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center;opacity:1;filter:none}
-#racers-panel .racer-card.selected strong,#racers-panel .racer-card.selected small{align-self:flex-start;background:rgba(3,13,28,.82);padding:2px 5px}
+#racers-panel .racer-card[data-racer] strong,#racers-panel .racer-card[data-racer] small{align-self:flex-start;background:rgba(3,13,28,.82);padding:2px 5px}
 .racers-panel .racer-card.selected:after{display:none}
 .racers-panel .racer-card .driver-number{position:absolute;top:8px;left:9px}
 .racers-panel .racer-card strong{font-size:clamp(18px,3vh,30px)!important;line-height:1}
