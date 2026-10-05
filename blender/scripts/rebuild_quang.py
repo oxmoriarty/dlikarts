@@ -28,11 +28,6 @@ tongue=mat('Quang tongue',(.9,.11,.075),0,.7)
 g['wheel'].__globals__.update(rim=black,silver=metal)
 r['badge'].__globals__['white']=white
 
-def striped_panel(name,center,size,base=blue,axis='x'):
-    parts=[cube(name,center,size,base,.023)]
-    # Broad orange and ivory bands follow the source's rear-wing/side-pod palette.
-    return parts
-
 def spring(name,start,end):
     a,b=Vector(start),Vector(end);direction=(b-a).normalized()
     across=direction.cross(Vector((0,1,0))).normalized();depth=direction.cross(across).normalized()
@@ -40,7 +35,21 @@ def spring(name,start,end):
     for i in range(49):
         t=i/48;angle=t*math.tau*4
         pts.append(a.lerp(b,t)+across*(math.cos(angle)*.043)+depth*(math.sin(angle)*.043))
-    return [bar(name,pts[i],pts[i+1],.009,blue,6) for i in range(len(pts)-1)]
+    # One continuous coil tube, with caps only at its two ends.
+    verts=[];faces=[];sides=6
+    for i,c in enumerate(pts):
+        tangent=(pts[min(i+1,len(pts)-1)]-pts[max(0,i-1)]).normalized()
+        radial=tangent.cross(direction).normalized();other=tangent.cross(radial).normalized()
+        for j in range(sides):
+            angle=j*math.tau/sides;verts.append(c+.009*(radial*math.cos(angle)+other*math.sin(angle)))
+    for i in range(len(pts)-1):
+        for j in range(sides):faces.append((i*sides+j,i*sides+(j+1)%sides,(i+1)*sides+(j+1)%sides,(i+1)*sides+j))
+    faces.extend([tuple(reversed(range(sides))),tuple(range((len(pts)-1)*sides,len(pts)*sides))])
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.materials.append(blue);mesh.update()
+    o=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(o)
+    bm=g['bmesh'].new();bm.from_mesh(mesh);g['bmesh'].ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(mesh);bm.free()
+    for poly in mesh.polygons:poly.use_smooth=True
+    return [o,bar('Coilover damper',a,b,.018,metal,10)]
 
 def kart():
     p=[cube('Floor pan',(0,.04,.20),(1.12,1.65,.12),black,.04),
@@ -55,6 +64,9 @@ def kart():
        cube('Rear lamp housing',(0,.964,.29),(.58,.045,.12),black,.02),
        cube('Rear red lamp',(0,.991,.29),(.48,.012,.045),red,.014),
        cube('Rear lamp core',(0,.999,.29),(.44,.005,.016),warm_lamp,.005)]
+    for shell in p[1:3]:
+        bevel=shell.modifiers.new('Rounded bonnet edges','BEVEL');bevel.width=.013;bevel.segments=2
+        bpy.context.view_layer.objects.active=shell;bpy.ops.object.modifier_apply(modifier=bevel.name)
     for z in [.32,.385,.45]:p.append(cube('Cyan engine vent',(0,.929,z),(.28,.012,.012),cyan,.005))
     p.append(badge('Bonnet Dlicom insignia',(0,-.82,.442),(.25,0,0),(0,.17,.073)))
     for s in [-1,1]:
@@ -99,7 +111,7 @@ def rounded_frame(name,cx,y,z,wx,hz,corner,material):
         for i in range(5):
             a=math.radians(start+i*90/4)
             pts.append((cx+dx+corner*math.cos(a),y,z+dz+corner*math.sin(a)))
-    return [bar(name,pts[i],pts[(i+1)%len(pts)],.0105,material,8) for i in range(len(pts))]
+    return [bar(name,pts[i],pts[(i+1)%len(pts)],.0075,material,8) for i in range(len(pts))]
 
 def driver():
     p=[]
@@ -121,12 +133,12 @@ def driver():
     for s in [-1,1]:
         ell('Ear',(s*.265,.087,1.086),(.056,.041,.073),skin)
         ell('Inner ear',(s*.282,.054,1.086),(.024,.013,.043),inner_skin,16,10)
-        ell('White eye',(s*.108,-.108,1.131),(.087,.040,.09),white,24,14)
-        ell('Blue iris',(s*.108,-.147,1.13),(.047,.012,.061),iris,20,12)
-        ell('Dark pupil',(s*.108,-.159,1.13),(.026,.007,.043),black,20,12)
-        ell('Eye glint',(s*.108-.013,-.166,1.153),(.011,.004,.014),white,12,8)
-        p.extend(rounded_frame('Black glasses',s*.110,-.175,1.135,.103,.095,.035,black))
-        p.append(bar('Glasses temple',(s*.207,-.172,1.17),(s*.269,.126,1.142),.009,black,10))
+        ell('White eye',(s*.108,-.103,1.131),(.076,.025,.078),white,24,14)
+        ell('Blue iris',(s*.108,-.126,1.13),(.041,.009,.054),iris,20,12)
+        ell('Dark pupil',(s*.108,-.135,1.13),(.023,.005,.038),black,20,12)
+        ell('Eye glint',(s*.108-.011,-.141,1.151),(.010,.003,.012),white,12,8)
+        p.extend(rounded_frame('Black glasses',s*.108,-.147,1.135,.095,.084,.030,black))
+        p.append(bar('Glasses temple',(s*.200,-.144,1.165),(s*.269,.126,1.142),.0075,black,10))
         brow=[(s*.079,-.107,1.245),(s*.114,-.102,1.255),(s*.153,-.082,1.244)]
         for j in range(2):p.append(bar('Eyebrow',brow[j],brow[j+1],.012,black,10))
         for a,b,rr,material in [((s*.19,.18,.83),(s*.269,-.035,.715),.078,white),
@@ -145,11 +157,11 @@ def driver():
         for j in range(3):p.append(bar('White shoelace',(s*.21-.049,-.51+j*.025,.286),(s*.21+.049,-.507+j*.025,.286),.006,white,6))
         p.append(bar('Blue hood drawstring',(s*.078,.02,.87),(s*.065,-.001,.745),.008,blue,8))
         p.append(cube('Blue shoulder patch',(s*.249,.108,.811),(.018,.080,.092),blue,.015))
-    p.append(bar('Glasses bridge',(-.019,-.178,1.143),(.019,-.178,1.143),.0095,black,10))
+    p.append(bar('Glasses bridge',(-.019,-.150,1.143),(.019,-.150,1.143),.0075,black,10))
     ell('Nose',(0,-.137,1.045),(.033,.031,.027),skin)
-    ell('Happy smile',(0,-.088,1.005),(.067,.023,.036),mouth,24,12)
-    ell('Tongue',(0,-.109,.994),(.038,.005,.012),tongue,16,10)
-    p.append(cube('Upper smile teeth',(0,-.11,1.02),(.094,.009,.013),white,.005))
+    ell('Happy smile',(0,-.095,.994),(.070,.020,.034),mouth,24,12)
+    ell('Tongue',(0,-.113,.983),(.037,.004,.011),tongue,16,10)
+    p.append(cube('Upper smile teeth',(0,-.113,1.011),(.094,.009,.013),white,.005))
     merge(p,'QUANG_SEATED')
 
 def render_reviews():

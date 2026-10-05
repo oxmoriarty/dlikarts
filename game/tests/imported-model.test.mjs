@@ -41,8 +41,8 @@ function geometryScene(bytes,json) {
   const root=new THREE.Group();json.scenes[json.scene||0].nodes.forEach(i=>root.add(nodes[i]));return root;
 }
 
-for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt']) for (const suffix of ['Driving.glb','Kart.glb']) {
-  const filename=(folder==='retree-rebuilt'?'Retree':'Gautam')+suffix;
+for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt','quang-rebuilt']) for (const suffix of (folder==='quang-rebuilt'?['Driving.glb']:['Driving.glb','Kart.glb'])) {
+  const filename=(folder==='quang-rebuilt'?'Quang':folder==='retree-rebuilt'?'Retree':'Gautam')+suffix;
   test(`${folder}/${filename} has a lightweight valid runtime mesh and ground-root adaptation`, () => {
     const bytes=readFileSync(new URL(`../../assets/characters/${folder}/${filename}`,import.meta.url));
     const json=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)));
@@ -57,7 +57,7 @@ for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt']) f
     if(folder.endsWith('-rebuilt')) {
       assert.equal(json.images?.length||0,0);
       assert.ok(json.materials.every(m=>!m.alphaMode||m.alphaMode==='OPAQUE'),'No transparent tire material');
-      assert.equal(json.meshes.length,suffix==='Driving.glb'?6:5);
+      assert.equal(json.meshes.length,folder==='quang-rebuilt'?7:suffix==='Driving.glb'?6:5);
       for(const label of ['FL','FR','RL','RR']) {
         const n=json.nodes.find(n=>n.name==='WHEEL_'+label),p=json.meshes[n.mesh].primitives[0];
         assert.equal(n.extras.treadPattern,'circumferential-vertical-grooves');
@@ -90,7 +90,7 @@ for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt']) f
     assert.ok(new THREE.Box3().setFromObject(visual.root).min.y>=-1e-6,'Tumbling imported model must stay above the road');
     const actual=prepareImportedKart(geometryScene(bytes,json));
     const actualVisual=new KartVisual({...kart,tumbleAngle:0,lean:-.18},actual);
-    if(folder==='retree-rebuilt') {
+    if(folder==='retree-rebuilt'||folder==='quang-rebuilt') {
       assert.equal(actualVisual.exhaust.jets.length,2);
       for(const [i,label] of ['LEFT','RIGHT'].entries()) {
         const socket=actual.getObjectByName('EXHAUST_SOCKET_'+label);
@@ -98,7 +98,7 @@ for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt']) f
         actual.updateMatrixWorld(true);
         const outlet=socket.getWorldPosition(new THREE.Vector3());
         const flame=actualVisual.exhaust.jets[i].getWorldPosition(new THREE.Vector3());
-        assert.ok(outlet.distanceTo(flame)<1e-6,'Flame originates at the exact Retree exhaust outlet');
+        assert.ok(outlet.distanceTo(flame)<1e-6,'Flame originates at the authored exhaust outlet');
       }
     }
     actualVisual.update(.02);
