@@ -172,7 +172,7 @@ def render(name,card=False):
 
 bpy.context.preferences.filepaths.save_version=0
 metrics={}
-for name in ['Retree','RetreeKart','RetreeDriving']:
+for name in (['Retree','RetreeKart','RetreeDriving'] if __name__ == '__main__' else []):
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     if name!='Retree':kart()
     if name!='RetreeKart':character(name=='RetreeDriving')
@@ -190,6 +190,7 @@ for name in ['Retree','RetreeKart','RetreeDriving']:
         for o in list(bpy.context.scene.objects):
             if o.type in ['LIGHT','CAMERA']:bpy.data.objects.remove(o,do_unlink=True)
         render(name,card=True)
-metrics['original_sha256']={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'assets/characters/retree/new-models').glob('*.glb')}
-(SRC/'build-metrics.json').write_text(json.dumps(metrics,indent=2))
-print('RETREE BUILD',json.dumps(metrics),flush=True)
+if __name__ == '__main__':
+    metrics['original_sha256']={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'assets/characters/retree/new-models').glob('*.glb')}
+    (SRC/'build-metrics.json').write_text(json.dumps(metrics,indent=2))
+    print('RETREE BUILD',json.dumps(metrics),flush=True)

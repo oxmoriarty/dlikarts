@@ -10,9 +10,13 @@ export class ExhaustFlames {
     this.time=0;this.intensity=0;this.jets=[];
     const asset=model.children[0];
     if(!asset?.getObjectByName('CHASSIS'))return;
-    // Authored rebuilt-model coordinates: exact outlets of the twin exhausts.
-    for(const x of [-.38,.38]) {
-      const jet=new THREE.Group();jet.name=x<0?'EXHAUST_FLAME_LEFT':'EXHAUST_FLAME_RIGHT';jet.position.set(x,.34,-.948);
+    // Read each authored outlet once; earlier Gautam assets retain their fallback.
+    asset.updateWorldMatrix(true,true);
+    for(const [i,label] of ['LEFT','RIGHT'].entries()) {
+      const jet=new THREE.Group();jet.name='EXHAUST_FLAME_'+label;
+      const socket=asset.getObjectByName('EXHAUST_SOCKET_'+label);
+      if(socket)jet.position.copy(asset.worldToLocal(socket.getWorldPosition(new THREE.Vector3())));
+      else jet.position.set(i===0?-.38:.38,.34,-.948);
       const shell=new THREE.Mesh(shape,outer),inner=new THREE.Mesh(shape,core);
       jet.add(shell,inner);asset.add(jet);jet.visible=false;this.jets.push(jet);
     }

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { tumbleGroundLift, impactTumblePose } from './tumbleMath.js';
-import { ExhaustFlames } from './ExhaustFlames.js';
+import { ExhaustFlames } from './ExhaustFlames.js?v=quang-1';
 
 const find = (root, name) => root.getObjectByName(name);
 
