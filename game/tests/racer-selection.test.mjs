@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { RACERS, racerId } from '../../shared/racers.js';
 
-for(const selectedId of ['retree','quang'])test(`${selectedId} selection persists, changes the launch label, and launches the selected model`,()=>{
+for(const selectedId of ['retree','quang','justsam'])test(`${selectedId} selection persists, changes the launch label, and launches the selected model`,()=>{
   const source=readFileSync(new URL('../../landing/menu.js',import.meta.url),'utf8');
   const selection=source.slice(source.indexOf("let selectedRacer = 'guatam';"),source.indexOf("document.addEventListener('keydown'"));
   function fixture(blocked=false) {
@@ -28,6 +28,22 @@ for(const selectedId of ['retree','quang'])test(`${selectedId} selection persist
   assert.equal(privateMode.context.location.href,'../game/?racer='+selectedId);
   for(const value of [null,'unknown','__proto__','constructor'])assert.equal(racerId(value),'guatam');
   for(const racer of Object.values(RACERS))assert.ok(existsSync(new URL('../../landing/'+racer.driving.split('?')[0],import.meta.url)));
+});
+
+test('Just Sam omits the blue head accessory and preserves the uploaded source',()=>{
+  const root=new URL('../../',import.meta.url),bytes=readFileSync(new URL('assets/characters/justsam-rebuilt/JustSamDriving.glb',root));
+  const length=bytes.readUInt32LE(12),json=JSON.parse(bytes.subarray(20,20+length));
+  const driver=json.nodes.find(n=>n.name==='JUSTSAM_SEATED');assert.ok(driver);
+  assert.ok(driver.extras.noBlueHeadAccessory);assert.equal(driver.extras.hairstyle,'complete-golden-bowl-cut');
+  assert.equal(json.images?.length||0,0);
+  const p=json.meshes[driver.mesh].primitives[0],color=json.accessors[p.attributes.COLOR_0],view=json.bufferViews[color.bufferView];
+  const start=28+length+(view.byteOffset||0)+(color.byteOffset||0),stride=view.byteStride||4;
+  for(let i=0;i<color.count;i++){
+    const at=start+i*stride;assert.equal(bytes[at+3],255);
+    assert.ok(!(bytes[at+2]>bytes[at]+30 && bytes[at+2]>bytes[at+1]+30),'No blue vertex color on the driver/head');
+  }
+  const source=readFileSync(new URL('assets/characters/justsam/new-models/JustSamDriving.glb',root));
+  assert.equal(createHash('sha256').update(source).digest('hex'),'10cb0c57846738152e6424f37db67c4e2e74e3e9d8daff7255b0eb72110bb9d8');
 });
 
 test('Quang has a uniformly skin-colored opaque bald head and keeps the source GLB unchanged',()=>{

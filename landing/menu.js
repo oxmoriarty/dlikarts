@@ -1,7 +1,7 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=gapless-kart-audio-1';
 import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
 import { populateCommunity } from './community.js';
-import { RACERS, racerId } from '../shared/racers.js?v=quang-1';
+import { RACERS, racerId } from '../shared/racers.js?v=justsam-1';
 
 const audio = new AudioManager();
 audio.playMusic('menu');

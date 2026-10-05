@@ -41,8 +41,8 @@ function geometryScene(bytes,json) {
   const root=new THREE.Group();json.scenes[json.scene||0].nodes.forEach(i=>root.add(nodes[i]));return root;
 }
 
-for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt','quang-rebuilt']) for (const suffix of (folder==='quang-rebuilt'?['Driving.glb']:['Driving.glb','Kart.glb'])) {
-  const filename=(folder==='quang-rebuilt'?'Quang':folder==='retree-rebuilt'?'Retree':'Gautam')+suffix;
+for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt','quang-rebuilt','justsam-rebuilt']) for (const suffix of (['quang-rebuilt','justsam-rebuilt'].includes(folder)?['Driving.glb']:['Driving.glb','Kart.glb'])) {
+  const filename=(folder==='justsam-rebuilt'?'JustSam':folder==='quang-rebuilt'?'Quang':folder==='retree-rebuilt'?'Retree':'Gautam')+suffix;
   test(`${folder}/${filename} has a lightweight valid runtime mesh and ground-root adaptation`, () => {
     const bytes=readFileSync(new URL(`../../assets/characters/${folder}/${filename}`,import.meta.url));
     const json=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)));
@@ -90,7 +90,7 @@ for (const folder of ['new-models/runtime','gautam-rebuilt','retree-rebuilt','qu
     assert.ok(new THREE.Box3().setFromObject(visual.root).min.y>=-1e-6,'Tumbling imported model must stay above the road');
     const actual=prepareImportedKart(geometryScene(bytes,json));
     const actualVisual=new KartVisual({...kart,tumbleAngle:0,lean:-.18},actual);
-    if(folder==='retree-rebuilt'||folder==='quang-rebuilt') {
+    if(folder==='retree-rebuilt'||folder==='quang-rebuilt'||folder==='justsam-rebuilt') {
       assert.equal(actualVisual.exhaust.jets.length,2);
       for(const [i,label] of ['LEFT','RIGHT'].entries()) {
         const socket=actual.getObjectByName('EXHAUST_SOCKET_'+label);
