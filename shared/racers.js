@@ -8,3 +8,11 @@ export const RACERS = Object.freeze({
 export function racerId(value) {
   return Object.hasOwn(RACERS, value) ? value : 'guatam';
 }
+
+// Character identity is separate from the unique participant/physics identity.
+// Fill the temporary fifth slot with a non-player character; no shared AI state.
+export function raceLineup(selected) {
+  const player = racerId(selected);
+  const opponents = Object.keys(RACERS).filter(id => id !== player);
+  return [player, ...Array.from({ length: 4 }, (_, i) => opponents[i % opponents.length])];
+}

@@ -9,7 +9,7 @@ import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gatew
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=exhaust-flames-1';
 import { KartVisual } from './vehicle/KartVisual.js?v=quang-1';
 import { prepareImportedKart } from './vehicle/importedModel.js';
-import { RACERS, racerId } from '../shared/racers.js?v=justsam-1';
+import { RACERS, racerId, raceLineup } from '../shared/racers.js?v=full-roster-1';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=competitive-ai-2';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=zipcap-duration-4';
@@ -51,11 +51,10 @@ function shadowify(root) { root.traverse(node => { if (node.isMesh) { node.castS
 
 async function boot() {
   try {
-    const [drivingGltf, kartGltf] = await Promise.all([
-      loader.loadAsync(RACERS[selectedRacer].driving), loader.loadAsync('../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2'),
-    ]);
-    shadowify(drivingGltf.scene); shadowify(kartGltf.scene);
-    game = createGame(drivingGltf, kartGltf);
+    const lineup = raceLineup(selectedRacer);
+    // Fetch/decode each character once; each racer receives its own cloned nodes.
+    const entries = await Promise.all([...new Set(lineup)].map(async id => [id, await loader.loadAsync(RACERS[id].driving)]));
+    game = createGame(lineup, new Map(entries));
     const startButton = document.querySelector('#start-race');
     startButton.disabled = false; startButton.setAttribute('aria-busy', 'false'); audio.playMusic('menu');
     new FixedStepLoop({ update, render }).start();
@@ -67,20 +66,20 @@ async function boot() {
   }
 }
 
-function createGame(drivingGltf, kartGltf) {
+function createGame(lineup, models) {
   const track = new SwitchbackYard(scene); city = new DlicomCity(scene, track, profileName); const racers = [];
   const playerKart = new ArcadeKart('player', KART_TUNING, track.getGridPose(0));
-  const playerVisual = new KartVisual(playerKart, prepareImportedKart(drivingGltf.scene)); scene.add(playerVisual.root);
-  racers.push({ id: selectedRacer, player: true, kart: playerKart, visual: playerVisual });
+  const playerModel = prepareImportedKart(models.get(lineup[0]).scene); shadowify(playerModel);
+  const playerVisual = new KartVisual(playerKart, playerModel); scene.add(playerVisual.root);
+  racers.push({ id: selectedRacer, characterId: lineup[0], name: RACERS[lineup[0]].name, player: true, kart: playerKart, visual: playerVisual });
   // CPU-only pace and steering tuning. Player handling is unchanged; opponents
   // have a consistent modest speed advantage, not position-based rubberbanding.
   const cpuKartTuning = { ...KART_TUNING, maxSpeed: CPU_TUNING.maxSpeed, acceleration: CPU_TUNING.acceleration, steerRate: 2.14, highSpeedSteerFactor: .52 };
   for (let i = 0; i < 4; i += 1) {
-    const kart = new ArcadeKart(`cpu-${i}`, cpuKartTuning, track.getGridPose(i + 1)); const model = prepareImportedKart(kartGltf.scene); shadowify(model);
-    // Test pilots deliberately retain the approved Guatam kart palette. The
-    // old colored head-marker spheres made these shared karts look recolored.
+    const characterId = lineup[i + 1];
+    const kart = new ArcadeKart(`cpu-${i}`, cpuKartTuning, track.getGridPose(i + 1)); const model = prepareImportedKart(models.get(characterId).scene); shadowify(model);
     const visual = new KartVisual(kart, model); scene.add(visual.root);
-    racers.push({ id: `test-pilot-${i+1}`, player: false, kart, visual, ai: null });
+    racers.push({ id: `cpu-${i}`, characterId, name: RACERS[characterId].name, player: false, kart, visual, ai: null });
   }
   const race = new RaceSystem(racers, track); race.state = 'READY'; racers.slice(1).forEach((racer, index) => racer.ai = new RacingLineAI(racer, track, index + 1));
   const powerups = new PowerupSystem(scene, track);
