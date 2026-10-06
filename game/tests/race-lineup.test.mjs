@@ -4,12 +4,12 @@ import { RACERS, raceLineup } from '../../shared/racers.js';
 import * as THREE from 'three';
 import { prepareImportedKart } from '../vehicle/importedModel.js';
 
-for (const selected of Object.keys(RACERS)) test(`${selected}: all other characters race independently with one non-player duplicate`, () => {
+for (const selected of Object.keys(RACERS)) test(`${selected}: all five characters race exactly once`, () => {
   const lineup = raceLineup(selected);
   assert.equal(lineup.length, 5); assert.equal(lineup[0], selected);
   const opponents = lineup.slice(1); assert.ok(opponents.every(id => id !== selected));
   assert.deepEqual(new Set(opponents), new Set(Object.keys(RACERS).filter(id => id !== selected)));
-  assert.equal(new Set(opponents).size, 3);
+  assert.equal(new Set(opponents).size, 4); assert.equal(new Set(lineup).size, 5);
 });
 test('invalid selection falls back to Gautam', () => assert.equal(raceLineup('unknown')[0], 'guatam'));
 test('duplicate visual instances share resources but not wheel transforms', () => {

@@ -28,7 +28,8 @@ const loader = new GLTFLoader();
 const retree = new URLSearchParams(location.search).get('models') === 'retree';
 const quang = new URLSearchParams(location.search).get('models') === 'quang';
 const justsam = new URLSearchParams(location.search).get('models') === 'justsam';
-const rebuilt = retree || quang || justsam || new URLSearchParams(location.search).get('models') === 'rebuilt';
+const kapuriya = new URLSearchParams(location.search).get('models') === 'kapuriya';
+const rebuilt = retree || quang || justsam || kapuriya || new URLSearchParams(location.search).get('models') === 'rebuilt';
 const counts = { character:null, kart:null };
 
 function shadowify(root) { root.traverse(o => { if (o.isMesh) { o.castShadow=true; o.receiveShadow=true; } }); }
@@ -48,7 +49,7 @@ function fit(target, offset=1) {
   // Portrait viewports need a wider framing for the kart's 2.7 m wheelbase.
   const portraitBoost = camera.aspect < .85 ? 1.58 : 1;
   const distance = offset * portraitBoost;
-  controls.target.copy(target); camera.position.copy(target).add(new THREE.Vector3(3.8*distance,2.8*distance,(retree||quang||justsam?5:-5)*distance)); controls.update();
+  controls.target.copy(target); camera.position.copy(target).add(new THREE.Vector3(3.8*distance,2.8*distance,(retree||quang||justsam||kapuriya?5:-5)*distance)); controls.update();
 }
 function setMode(mode) {
   if (!character || !kart) return;
@@ -110,14 +111,14 @@ document.querySelector('#frontSteer').addEventListener('input',event=>{
 document.querySelector('#focus').addEventListener('change',e=>setMode(e.target.value));
 document.querySelector('#resetView').onclick=()=>setMode(document.querySelector('#focus').value);
 Promise.all([
-  loader.loadAsync(justsam?'../assets/characters/justsam-rebuilt/JustSamDriving.glb?v=justsam-1':quang?'../assets/characters/quang-rebuilt/QuangDriving.glb?v=quang-1':retree?'../assets/characters/retree-rebuilt/RetreeDriving.glb?v=retree-1':rebuilt?'../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2':'../assets/characters/guatam.glb'),
-  (quang||justsam)?Promise.resolve(null):loader.loadAsync(retree?'../assets/characters/retree-rebuilt/RetreeKart.glb?v=retree-1':rebuilt?'../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2':'../assets/vehicles/guatam-kart.glb?v=approved-palette'),
+  loader.loadAsync(kapuriya?'../assets/characters/kapuriya-rebuilt/KapuriyaDriving.glb?v=kapuriya-1':justsam?'../assets/characters/justsam-rebuilt/JustSamDriving.glb?v=justsam-1':quang?'../assets/characters/quang-rebuilt/QuangDriving.glb?v=quang-1':retree?'../assets/characters/retree-rebuilt/RetreeDriving.glb?v=retree-1':rebuilt?'../assets/characters/gautam-rebuilt/GautamDriving.glb?v=hair-treads-2':'../assets/characters/guatam.glb'),
+  (quang||justsam||kapuriya)?Promise.resolve(null):loader.loadAsync(retree?'../assets/characters/retree-rebuilt/RetreeKart.glb?v=retree-1':rebuilt?'../assets/characters/gautam-rebuilt/GautamKart.glb?v=hair-treads-2':'../assets/vehicles/guatam-kart.glb?v=approved-palette'),
   retree?loader.loadAsync('../assets/characters/retree-rebuilt/Retree.glb?v=retree-1'):Promise.resolve(null)
 ]).then(([cg,kg,sg])=>{
-  if(quang||justsam){
+  if(quang||justsam||kapuriya){
     // Inspect the kart by reusing the combined asset; no separate kart download.
     const kartOnly=cg.scene.clone(true);
-    for(const name of (justsam?['JUSTSAM_SEATED']:['QUANG_HEAD','QUANG_SEATED']))node(kartOnly,name)?.removeFromParent();
+    for(const name of (kapuriya?['KAPURIYA_SEATED']:justsam?['JUSTSAM_SEATED']:['QUANG_HEAD','QUANG_SEATED']))node(kartOnly,name)?.removeFromParent();
     kg={scene:kartOnly,animations:[]};
   }
   if(sg){standing=sg.scene;standing.visible=false;shadowify(standing);scene.add(standing);}
@@ -126,7 +127,7 @@ Promise.all([
   if(rebuilt){
     document.querySelector('#focus option[value="character"]').disabled=!standing;
     if(retree) document.querySelector('#focus option[value="character"]').textContent='Retree standing';
-    document.querySelector('.deck').textContent=justsam?'Just Sam — complete golden hair, yellow kart, no blue head accessory. Kart view reuses the combined model.':quang?'Quang — bald skin-colored head, blue-white-orange kart. Kart view uses the same combined model.':retree?'Rebuilt Retree — standing character, kart, and driving model.':'Rebuilt Gautam and kart — clean solid-wheel models.';
+    document.querySelector('.deck').textContent=kapuriya?'Kapuriya — round blue character, white paws, red collar and gold bell; blue paw-branded kart.':justsam?'Just Sam — complete golden hair, yellow kart, no blue head accessory. Kart view reuses the combined model.':quang?'Quang — bald skin-colored head, blue-white-orange kart. Kart view uses the same combined model.':retree?'Rebuilt Retree — standing character, kart, and driving model.':'Rebuilt Gautam and kart — clean solid-wheel models.';
     document.querySelector('.clip-panel').hidden=true;
     document.querySelector('#steeringWheel').disabled=true;
     statsEl.textContent=statsEl.textContent.replace('CHARACTER','DRIVER + KART').replace('wheels + sockets live','solid wheels + steering');

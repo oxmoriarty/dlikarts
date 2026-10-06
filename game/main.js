@@ -9,7 +9,7 @@ import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gatew
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=exhaust-flames-1';
 import { KartVisual } from './vehicle/KartVisual.js?v=quang-1';
 import { prepareImportedKart } from './vehicle/importedModel.js';
-import { RACERS, racerId, raceLineup } from '../shared/racers.js?v=full-roster-1';
+import { RACERS, racerId, raceLineup } from '../shared/racers.js?v=kapuriya-1';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=competitive-ai-2';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=zipcap-duration-4';

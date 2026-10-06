@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { RACERS, racerId } from '../../shared/racers.js';
 
-for(const selectedId of ['retree','quang','justsam'])test(`${selectedId} selection persists, changes the launch label, and launches the selected model`,()=>{
+for(const selectedId of ['retree','quang','justsam','kapuriya'])test(`${selectedId} selection persists, changes the launch label, and launches the selected model`,()=>{
   const source=readFileSync(new URL('../../landing/menu.js',import.meta.url),'utf8');
   const selection=source.slice(source.indexOf("let selectedRacer = 'guatam';"),source.indexOf("document.addEventListener('keydown'"));
   function fixture(blocked=false) {
@@ -28,6 +28,16 @@ for(const selectedId of ['retree','quang','justsam'])test(`${selectedId} selecti
   assert.equal(privateMode.context.location.href,'../game/?racer='+selectedId);
   for(const value of [null,'unknown','__proto__','constructor'])assert.equal(racerId(value),'guatam');
   for(const racer of Object.values(RACERS))assert.ok(existsSync(new URL('../../landing/'+racer.driving.split('?')[0],import.meta.url)));
+});
+
+test('Kapuriya has a distinct round driver and preserves the uploaded source',()=>{
+  const root=new URL('../../',import.meta.url),bytes=readFileSync(new URL('assets/characters/kapuriya-rebuilt/KapuriyaDriving.glb',root));
+  const json=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)));
+  const driver=json.nodes.find(n=>n.name==='KAPURIYA_SEATED');assert.ok(driver);
+  assert.ok(driver.extras.roundHead);assert.equal(driver.extras.referenceCharacter,'Kapuriya');
+  assert.equal(json.images?.length||0,0);assert.equal(json.meshes.length,6);
+  const source=readFileSync(new URL('assets/characters/kapuriya/new-models/KapuriyaDriving.glb',root));
+  assert.equal(createHash('sha256').update(source).digest('hex'),'9d4a8fd691628e1f0f5171c4fbeae0d86938748e25d443a3263a5b1b55f91935');
 });
 
 test('Just Sam omits the blue head accessory and preserves the uploaded source',()=>{
