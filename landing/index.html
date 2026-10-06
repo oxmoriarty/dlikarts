@@ -20,6 +20,7 @@
       const route = new URLSearchParams(location.search);
       if (route.get('panel') === 'settings') document.documentElement.classList.add('direct-settings');
       if (route.get('view') === 'menu') document.documentElement.classList.add('direct-menu');
+      if (['racers','community','howto'].includes(route.get('panel'))) document.documentElement.classList.add(`direct-${route.get('panel')}`);
     </script>
   </head>
   <body>
@@ -99,6 +100,15 @@
       </section>
     </main>
     <script src="../shared/fit-content.js?v=1" defer></script>
-    <script type="module" src="./menu.js?v=kapuriya-1"></script>
+    <script>
+      // Show a returning player's destination before optional module imports load.
+      const directPanel = route.get('panel');
+      if (['settings','racers','community','howto'].includes(directPanel)) {
+        document.querySelector('#splash').hidden = true;
+        document.querySelector('#menu-screen').hidden = false;
+        document.querySelector(`#${directPanel}-panel`).hidden = false;
+      }
+    </script>
+    <script type="module" src="./menu.js?v=ready-art-2"></script>
   </body>
 </html>

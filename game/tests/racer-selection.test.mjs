@@ -13,7 +13,7 @@ for(const selectedId of ['retree','quang','justsam','kapuriya'])test(`${selected
     const cards=Object.keys(RACERS).map(id=>({dataset:{racer:id},selected:false,attrs:{},listeners:{},
       classList:{toggle(_,value){cards.find(c=>c.dataset.racer===id).selected=value;}},
       setAttribute(n,v){this.attrs[n]=v;},addEventListener(n,fn){this.listeners[n]=fn;}}));
-    const context={RACERS,racerId,playSelect(){},location:{href:''},
+    const context={RACERS,racerId,URLSearchParams,playSelect(){},location:{href:'',search:''},
       document:{querySelector(s){return s==='#launch-game'?launch:message;},querySelectorAll(){return cards;}},
       localStorage:{getItem(k){if(blocked)throw Error('Storage blocked');return storage.get(k);},setItem(k,v){if(blocked)throw Error('Storage blocked');storage.set(k,v);}}};
     vm.runInNewContext(selection,context);return {context,storage,cards,message,launch};

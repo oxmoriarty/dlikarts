@@ -17,3 +17,8 @@ export function raceLineup(selected) {
   const opponents = Object.keys(RACERS).filter(id => id !== player);
   return [player, ...opponents.slice(0, 4)];
 }
+
+export function racerCard(selected) {
+  const id = racerId(selected);
+  return `../assets/characters/${id}-card.png`;
+}

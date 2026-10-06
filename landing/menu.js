@@ -1,7 +1,7 @@
 import { AudioManager } from '../game/audio/AudioManager.js?v=gapless-kart-audio-1';
 import { prepareMobilePresentation, requestMobilePresentation } from '../shared/mobile-presentation.js?v=persistent-landscape-1';
 import { populateCommunity } from './community.js';
-import { RACERS, racerId } from '../shared/racers.js?v=kapuriya-1';
+import { RACERS, racerId } from '../shared/racers.js?v=ready-art-1';
 
 const audio = new AudioManager();
 audio.playMusic('menu');
@@ -38,9 +38,9 @@ function loadSetting(key, input, fallback) { const value = localStorage.getItem(
 function syncOutput(input) { const output = document.querySelector(`output[for="${input.id}"]`); if (output) output.textContent = `${input.value}%`; }
 
 document.querySelector('#skip-intro')?.addEventListener('click', async () => { await audio.unlock(); playSelect(); void requestMobilePresentation(); revealMenu(); });
-if (requestedPanel === 'settings') {
+if (['settings','racers','community','howto'].includes(requestedPanel)) {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
-  requestAnimationFrame(() => openPanel('settings-panel'));
+  requestAnimationFrame(() => openPanel(`${requestedPanel}-panel`));
 } else if (requestedView === 'menu') {
   splash.hidden = true; menu.hidden = false; menu.classList.add('entered');
 } else window.setTimeout(revealMenu, 2100);
@@ -53,6 +53,8 @@ document.querySelector('#open-game-jam').addEventListener('click', () => { void 
 document.querySelectorAll('.community-panel a').forEach(link => link.addEventListener('click', playSelect));
 let selectedRacer = 'guatam';
 try { selectedRacer = racerId(localStorage.getItem('dlikarts.racer')); } catch { /* Storage can be unavailable in private browsing. */ }
+const requestedRacer = new URLSearchParams(location.search).get('racer');
+if (requestedRacer) selectedRacer = racerId(requestedRacer);
 function selectRacer(id) {
   selectedRacer = racerId(id);
   document.querySelectorAll('.racer-card[data-racer]').forEach(card => {

@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+document.querySelector('#garage-back').addEventListener('click', event => {
+  if (document.referrer && new URL(document.referrer).origin === location.origin && history.length > 1) {
+    event.preventDefault(); history.back();
+  }
+});
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 

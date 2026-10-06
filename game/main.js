@@ -9,7 +9,7 @@ import { SwitchbackYard } from './track/SwitchbackYard.js?v=dlicom-branded-gatew
 import { ArcadeKart } from './vehicle/ArcadeKart.js?v=exhaust-flames-1';
 import { KartVisual } from './vehicle/KartVisual.js?v=quang-1';
 import { prepareImportedKart } from './vehicle/importedModel.js';
-import { RACERS, racerId, raceLineup } from '../shared/racers.js?v=kapuriya-1';
+import { RACERS, racerId, raceLineup, racerCard } from '../shared/racers.js?v=ready-art-1';
 import { RaceSystem } from './race/RaceSystem.js?v=lap-banner';
 import { RacingLineAI } from './ai/RacingLineAI.js?v=competitive-ai-2';
 import { PowerupSystem } from './powerups/PowerupSystem.js?v=zipcap-duration-4';
@@ -40,6 +40,11 @@ const raceControlChoice = document.querySelector('#race-control-choice');
 const autoplaySmokeTest = new URLSearchParams(location.search).has('autoplay');
 const previewFinish = new URLSearchParams(location.search).has('previewFinish');
 const selectedRacer = racerId(new URLSearchParams(location.search).get('racer'));
+const readyArt = document.querySelector('#ready-racer-art');
+readyArt.src = racerCard(selectedRacer); readyArt.alt = `${RACERS[selectedRacer].name} with their kart`;
+document.querySelector('#ready-racer-name').textContent = RACERS[selectedRacer].name;
+document.querySelector('#ready-back').href = `../landing/?view=menu&panel=racers&racer=${selectedRacer}`;
+document.querySelector('#change-racer').href = `../landing/?view=menu&panel=racers&racer=${selectedRacer}`;
 let game = null; let city = null; let frameSamples = []; let lastRender = performance.now(); let qualityProfile;
 
 function applyQuality(name) {
